@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-deep-navy: #0A1628;
+    --color-brand-blue: #1A3A6B;
+    --color-action-blue: #1E6FD9;
+    --color-orange: #FF6B00;
+    --color-cyan: #00C6FF;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    background-color: #0A1628;
+    color: #fff;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+  }
+}
