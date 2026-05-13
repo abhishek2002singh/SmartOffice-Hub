@@ -102,7 +102,7 @@ ams/
 
 | # | Module | Phase | Status |
 |---|--------|-------|--------|
-| A | Core (Auth, RBAC, Users, Depts, Audit) | 1 | Not started |
+| A | Core (Auth, RBAC, Users, Depts, Audit) | 1 | ✅ Complete (2026-05-13) |
 | B | CRM (Sales — Leads, Pipeline, Clients, Communications) | 2 | Not started |
 | C | DM (Daily Tasks + Audit Reports, 15 platforms) | 3 | Not started |
 | D | GD (Task inbox, revisions, DM-routed delivery) | 3 | Not started |
@@ -271,36 +271,20 @@ VITE_API_URL=http://localhost:5000/api/v1
 
 ---
 
-## Current Phase: PHASE 1 — Foundation
+## ✅ PHASE 1 — Foundation (COMPLETE — 2026-05-13)
 
-**Goal:** Build the foundation that all other modules depend on.
+**Week 1 ✅:** Backend foundation — Express, MongoDB, JWT auth, RBAC, Audit logs, Seeder
+**Week 2 ✅:** Frontend — Redux Toolkit, Login page, MasterLayout, User/Dept CRUD
+**Week 3 ✅:** Notifications (Socket.io), Permission matrix UI, Settings page
+**Week 4 ✅:** Audit log viewer, Profile page, Search bar, 21 passing tests
 
-**Week 1 Deliverables:**
-1. Project scaffolding (backend + frontend folders, package.json, ESLint, Prettier)
-2. MongoDB connection + base error handling + central logger
-3. User model + Department model + Role/Permission models
-4. JWT auth (login + refresh + logout)
-5. RBAC middleware (`requirePermission`)
-6. Audit log middleware + model
+**Entry point:** `backend/src/server.js` | Frontend: Vite on port 5173
 
-**Week 2 Deliverables:**
-1. Frontend scaffolding (Vite + React + Tailwind + Router)
-2. Login page + AuthContext + protected routes
-3. Master layout (sidebar + topbar + notification bell)
-4. User CRUD pages (Superadmin only)
-5. Department CRUD pages
+---
 
-**Week 3 Deliverables:**
-1. Permission cascade UI (Superadmin → Admin toggle matrix)
-2. Notification engine (model + service + in-app delivery via Socket.io)
-3. In-app notification UI (bell icon dropdown)
-4. Settings page (company info, fiscal year)
+## Current Phase: PHASE 2 — CRM (Sales)
 
-**Week 4 Deliverables:**
-1. Audit log viewer page (Superadmin only)
-2. Profile self-service page
-3. Global search bar (placeholder — wire up later)
-4. Testing + bug fixes + Phase 1 deployment
+**Goal:** Build CRM module — Leads, Pipeline, Clients, Communications.
 
 ---
 

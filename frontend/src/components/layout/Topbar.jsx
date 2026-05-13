@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { Bell, LogOut, ChevronDown, Check, CheckCheck, Info, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react'
+import { Bell, LogOut, ChevronDown, Check, CheckCheck, Info, AlertTriangle, AlertCircle, CheckCircle, Search } from 'lucide-react'
 import { logoutThunk } from '../../store/authSlice'
 import { fetchNotifications, markRead, markAllRead, pushNotification } from '../../store/notificationSlice'
 import { connectSocket, disconnectSocket } from '../../services/socket'
@@ -78,6 +78,17 @@ export default function Topbar({ title }) {
       <h1 className="text-lg font-semibold text-white">{title}</h1>
 
       <div className="flex items-center gap-3">
+
+        {/* Global Search (placeholder — wire up in Phase 2) */}
+        <button
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-500 border transition-colors hover:border-white/20 hover:text-gray-400"
+          style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)', minWidth: '180px' }}
+          title="Global search (coming soon)"
+        >
+          <Search size={14} />
+          <span>Search...</span>
+          <span className="ml-auto text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>⌘K</span>
+        </button>
 
         {/* Notification Bell */}
         <div className="relative" ref={bellRef}>

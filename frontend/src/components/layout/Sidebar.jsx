@@ -1,13 +1,15 @@
 import { NavLink } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { LayoutDashboard, Users, Building2, Shield, Settings, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Shield, Settings, ScrollText, UserCircle, ChevronRight } from 'lucide-react'
 
 const NAV = [
   { to: '/dashboard',    label: 'Dashboard',   icon: LayoutDashboard, minRole: 'TEAM_MEMBER' },
   { to: '/users',        label: 'Users',        icon: Users,           minRole: 'ADMIN' },
   { to: '/departments',  label: 'Departments',  icon: Building2,       minRole: 'ADMIN' },
   { to: '/permissions',  label: 'Permissions',  icon: Shield,          minRole: 'SUPERADMIN' },
+  { to: '/audit-logs',   label: 'Audit Logs',   icon: ScrollText,      minRole: 'SUPERADMIN' },
   { to: '/settings',     label: 'Settings',     icon: Settings,        minRole: 'ADMIN' },
+  { to: '/profile',      label: 'My Profile',   icon: UserCircle,      minRole: 'TEAM_MEMBER' },
 ]
 
 const ROLE_ORDER = ['TEAM_MEMBER', 'DEPT_HEAD', 'SUBADMIN', 'ADMIN', 'SUPERADMIN']

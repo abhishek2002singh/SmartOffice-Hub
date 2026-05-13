@@ -4,12 +4,14 @@ import { useDispatch } from 'react-redux'
 import { fetchMeThunk } from './store/authSlice'
 import ProtectedRoute from './components/ProtectedRoute'
 import MasterLayout from './components/layout/MasterLayout'
-import LoginPage from './pages/LoginPage'
-import DashboardPage from './pages/DashboardPage'
-import UsersPage from './pages/UsersPage'
+import LoginPage       from './pages/LoginPage'
+import DashboardPage   from './pages/DashboardPage'
+import UsersPage       from './pages/UsersPage'
 import DepartmentsPage from './pages/DepartmentsPage'
 import PermissionsPage from './pages/PermissionsPage'
-import SettingsPage from './pages/SettingsPage'
+import AuditLogPage    from './pages/AuditLogPage'
+import SettingsPage    from './pages/SettingsPage'
+import ProfilePage     from './pages/ProfilePage'
 
 function AppRoutes() {
   const dispatch = useDispatch()
@@ -33,19 +35,13 @@ function AppRoutes() {
           </ProtectedRoute>
         }>
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="users" element={
-            <ProtectedRoute minRole="ADMIN"><UsersPage /></ProtectedRoute>
-          } />
-          <Route path="departments" element={
-            <ProtectedRoute minRole="ADMIN"><DepartmentsPage /></ProtectedRoute>
-          } />
-          <Route path="permissions" element={
-            <ProtectedRoute minRole="SUPERADMIN"><PermissionsPage /></ProtectedRoute>
-          } />
-          <Route path="settings" element={
-            <ProtectedRoute minRole="ADMIN"><SettingsPage /></ProtectedRoute>
-          } />
+          <Route path="dashboard"   element={<DashboardPage />} />
+          <Route path="profile"     element={<ProfilePage />} />
+          <Route path="users"       element={<ProtectedRoute minRole="ADMIN"><UsersPage /></ProtectedRoute>} />
+          <Route path="departments" element={<ProtectedRoute minRole="ADMIN"><DepartmentsPage /></ProtectedRoute>} />
+          <Route path="settings"    element={<ProtectedRoute minRole="ADMIN"><SettingsPage /></ProtectedRoute>} />
+          <Route path="permissions" element={<ProtectedRoute minRole="SUPERADMIN"><PermissionsPage /></ProtectedRoute>} />
+          <Route path="audit-logs"  element={<ProtectedRoute minRole="SUPERADMIN"><AuditLogPage /></ProtectedRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
