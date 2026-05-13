@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import {
-  LayoutDashboard, Users, Building2, Settings, ChevronRight,
-} from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Shield, Settings, ChevronRight } from 'lucide-react'
 
 const NAV = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, minRole: 'TEAM_MEMBER' },
-  { to: '/users', label: 'Users', icon: Users, minRole: 'ADMIN' },
-  { to: '/departments', label: 'Departments', icon: Building2, minRole: 'ADMIN' },
+  { to: '/dashboard',    label: 'Dashboard',   icon: LayoutDashboard, minRole: 'TEAM_MEMBER' },
+  { to: '/users',        label: 'Users',        icon: Users,           minRole: 'ADMIN' },
+  { to: '/departments',  label: 'Departments',  icon: Building2,       minRole: 'ADMIN' },
+  { to: '/permissions',  label: 'Permissions',  icon: Shield,          minRole: 'SUPERADMIN' },
+  { to: '/settings',     label: 'Settings',     icon: Settings,        minRole: 'ADMIN' },
 ]
 
 const ROLE_ORDER = ['TEAM_MEMBER', 'DEPT_HEAD', 'SUBADMIN', 'ADMIN', 'SUPERADMIN']
@@ -20,21 +20,20 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   return (
     <aside
-      className="flex flex-col h-full transition-all duration-300 border-r"
+      className="flex flex-col shrink-0 h-full transition-all duration-300 border-r"
       style={{
         width: collapsed ? '64px' : '220px',
         backgroundColor: '#0A1628',
         borderColor: 'rgba(255,255,255,0.08)',
-        minHeight: '100vh',
       }}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1E6FD9' }}>
+        <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1E6FD9' }}>
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
             <polygon points="12,2 22,20 2,20" fill="#fff" opacity="0.9" />
-            <rect x="11" y="9" width="2" height="8" rx="0.5" fill="#0A1628" />
-            <polygon points="12,5 15,11 9,11" fill="#0A1628" />
+            <rect x="11" y="9" width="2" height="8" rx="0.5" fill="#1E6FD9" />
+            <polygon points="12,5 15,11 9,11" fill="#1E6FD9" />
           </svg>
         </div>
         {!collapsed && (
@@ -46,21 +45,20 @@ export default function Sidebar({ collapsed, onToggle }) {
       </div>
 
       {/* Nav links */}
-      <nav className="flex-1 py-4 space-y-1 px-2">
+      <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
         {visibleNav.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
+            title={collapsed ? label : undefined}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                isActive
-                  ? 'text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                isActive ? 'text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`
             }
             style={({ isActive }) => isActive ? { backgroundColor: '#1E6FD9' } : {}}
           >
-            <Icon size={18} className="flex-shrink-0" />
+            <Icon size={18} className="shrink-0" />
             {!collapsed && <span>{label}</span>}
           </NavLink>
         ))}
@@ -72,7 +70,7 @@ export default function Sidebar({ collapsed, onToggle }) {
         className="flex items-center justify-center py-4 border-t text-gray-500 hover:text-white transition-colors"
         style={{ borderColor: 'rgba(255,255,255,0.08)' }}
       >
-        <ChevronRight size={16} className={`transition-transform ${collapsed ? '' : 'rotate-180'}`} />
+        <ChevronRight size={16} className={`transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`} />
       </button>
     </aside>
   )
