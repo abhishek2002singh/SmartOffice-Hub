@@ -12,6 +12,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
+const deptRoutes = require('./routes/department.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +34,7 @@ app.get('/api/v1/health', (_req, res) => res.json({ success: true, message: 'AMS
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/departments', deptRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

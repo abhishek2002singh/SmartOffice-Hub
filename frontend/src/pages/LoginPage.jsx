@@ -1,74 +1,110 @@
-import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { loginThunk, clearError } from '../store/authSlice'
+import { useEffect } from 'react'
+
+const schema = z.object({
+  email: z.string().email('Valid email daalo'),
+  password: z.string().min(6, 'Password kam se kam 6 characters ka hona chahiye'),
+})
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { error, loading } = useSelector((s) => s.auth)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const res = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      if (!data.success) throw new Error(data.error?.message || 'Login failed')
-      localStorage.setItem('accessToken', data.data.accessToken)
-      localStorage.setItem('refreshToken', data.data.refreshToken)
-      alert(`Welcome, ${data.data.user.name}! (Dashboard coming in Week 2)`)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(schema),
+  })
+
+  useEffect(() => {
+    dispatch(clearError())
+  }, [dispatch])
+
+  const onSubmit = async ({ email, password }) => {
+    const result = await dispatch(loginThunk({ email, password }))
+    if (loginThunk.fulfilled.match(result)) {
+      navigate('/dashboard')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0A1628' }}>
-      <div className="w-full max-w-md p-8 rounded-2xl" style={{ backgroundColor: '#1A3A6B' }}>
-        <h1 className="text-3xl font-bold text-white text-center mb-2">AMS</h1>
-        <p className="text-center text-sm mb-8" style={{ color: '#00C6FF' }}>ANK Digital Media</p>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0A1628' }}>
+      <div className="w-full max-w-md">
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20 focus:outline-none focus:border-blue-400"
-              placeholder="ankur@ankdigitalmedia.com"
-            />
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ backgroundColor: '#1A3A6B' }}>
+            <svg viewBox="0 0 40 40" className="w-9 h-9" fill="none">
+              <polygon points="20,4 36,34 4,34" fill="#1E6FD9" />
+              <rect x="18" y="14" width="4" height="14" rx="1" fill="#fff" />
+              <polygon points="20,8 25,18 15,18" fill="#fff" />
+            </svg>
           </div>
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20 focus:outline-none focus:border-blue-400"
-              placeholder="••••••••"
-            />
-          </div>
+          <h1 className="text-3xl font-bold text-white tracking-wide">AMS</h1>
+          <p className="text-sm mt-1" style={{ color: '#00C6FF' }}>ANK Digital Media</p>
+        </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+        {/* Card */}
+        <div className="rounded-2xl p-8 shadow-2xl" style={{ backgroundColor: '#1A3A6B' }}>
+          <h2 className="text-xl font-semibold text-white mb-6">Sign in to your account</h2>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-lg font-semibold text-white disabled:opacity-50"
-            style={{ backgroundColor: '#1E6FD9' }}
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Email address</label>
+              <input
+                type="email"
+                autoComplete="email"
+                {...register('email')}
+                className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 border focus:outline-none transition"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderColor: errors.email ? '#ef4444' : 'rgba(255,255,255,0.15)',
+                }}
+                placeholder="you@ankdigitalmedia.com"
+              />
+              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+              <input
+                type="password"
+                autoComplete="current-password"
+                {...register('password')}
+                className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 border focus:outline-none transition"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderColor: errors.password ? '#ef4444' : 'rgba(255,255,255,0.15)',
+                }}
+                placeholder="••••••••"
+              />
+              {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>}
+            </div>
+
+            {error && (
+              <div className="rounded-lg px-4 py-3 text-sm text-red-300" style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting || loading}
+              className="w-full py-3 rounded-xl font-semibold text-white text-sm transition-opacity disabled:opacity-60 cursor-pointer"
+              style={{ backgroundColor: '#1E6FD9' }}
+            >
+              {isSubmitting || loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-xs mt-6" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          ANK Digital Media · Internal Use Only
+        </p>
       </div>
     </div>
   )
