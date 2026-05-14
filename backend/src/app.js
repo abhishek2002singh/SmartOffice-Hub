@@ -18,6 +18,14 @@ const permRoutes     = require('./routes/permission.routes');
 const settingsRoutes = require('./routes/settings.routes');
 const auditRoutes    = require('./routes/auditLog.routes');
 const profileRoutes  = require('./routes/profile.routes');
+const leadRoutes     = require('./routes/lead.routes');
+const clientRoutes   = require('./routes/client.routes');
+const crmRoutes      = require('./routes/crm.routes');
+const dmRoutes       = require('./routes/dm.routes');
+const dmAuditRoutes  = require('./routes/dmAudit.routes');
+const gdRoutes       = require('./routes/gd.routes');
+const devRoutes      = require('./routes/dev.routes');
+const hrRoutes       = require('./routes/hr.routes');
 
 const app    = express();
 const server = http.createServer(app);
@@ -58,8 +66,16 @@ app.use('/api/v1/permissions',   permRoutes);
 app.use('/api/v1/settings',      settingsRoutes);
 app.use('/api/v1/audit-logs',    auditRoutes);
 app.use('/api/v1/profile',       profileRoutes);
+app.use('/api/v1/crm/leads',     leadRoutes);
+app.use('/api/v1/crm/clients',   clientRoutes);
+app.use('/api/v1/crm',           crmRoutes);
+app.use('/api/v1/dm',            dmRoutes);
+app.use('/api/v1/dm',            dmAuditRoutes);
+app.use('/api/v1/gd',            gdRoutes);
+app.use('/api/v1/dev',           devRoutes);
+app.use('/api/v1/hr',            hrRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
 
-module.exports = { app, server };
+module.exports = { app, server, io };
