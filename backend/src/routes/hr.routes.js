@@ -94,4 +94,44 @@ router.post ('/leave-requests',             requirePermission('hr:leave:create')
 router.patch('/leave-requests/:id/review',  requirePermission('hr:leave:update'), attCtrl.reviewLeave);
 router.patch('/leave-requests/:id/cancel',  requirePermission('hr:leave:create'), attCtrl.cancelLeave);
 
+// ── WEEK 18 — Payroll ─────────────────────────────────────────────────────────
+const payCtrl = require('../controllers/payroll.controller');
+
+// Salary Structures (Superadmin/Admin)
+router.get   ('/salary-structures',      requirePermission('hr:salary:read'),   payCtrl.listSalaryStructures);
+router.post  ('/salary-structures',      requirePermission('hr:salary:update'), payCtrl.createSalaryStructure);
+router.get   ('/salary-structures/:id',  requirePermission('hr:salary:read'),   payCtrl.getSalaryStructure);
+router.patch ('/salary-structures/:id',  requirePermission('hr:salary:update'), payCtrl.updateSalaryStructure);
+router.delete('/salary-structures/:id',  requirePermission('hr:salary:update'), payCtrl.deleteSalaryStructure);
+
+// Employee Salary Assignment
+router.post('/employees/:id/salary',         requirePermission('hr:salary:update'), payCtrl.assignSalary);
+router.get ('/employees/:id/salary-history', requirePermission('hr:salary:read'),   payCtrl.getSalaryHistory);
+
+// Payroll Runs
+router.post ('/payroll/process',     requirePermission('hr:payroll:process'), payCtrl.processPayroll);
+router.get  ('/payroll',             requirePermission('hr:salary:read'),     payCtrl.listPayrollRuns);
+router.get  ('/payroll/:id',         requirePermission('hr:salary:read'),     payCtrl.getPayrollRun);
+router.patch('/payroll/:id/disburse',requirePermission('hr:payroll:disburse'),payCtrl.disbursePayroll);
+router.get  ('/payroll/:id/bank-file',requirePermission('hr:payroll:disburse'),payCtrl.getBankFile);
+
+// Payslips
+router.get('/me/payslips',          requirePermission('hr:self:read'),   payCtrl.listMyPayslips);
+router.get('/payslips/:id',         requirePermission('hr:self:read'),   payCtrl.getPayslip);
+router.get('/payslips/:id/pdf',     requirePermission('hr:self:read'),   payCtrl.getPayslipPDF);
+
+// Reimbursements
+router.post ('/reimbursements',            requirePermission('hr:reimbursement:create'), payCtrl.submitReimbursement);
+router.get  ('/reimbursements',            requirePermission('hr:reimbursement:read'),   payCtrl.listReimbursements);
+router.patch('/reimbursements/:id/review', requirePermission('hr:reimbursement:update'), payCtrl.reviewReimbursement);
+
+// Bonuses
+router.post  ('/bonuses',      requirePermission('hr:bonus:create'), payCtrl.createBonus);
+router.get   ('/bonuses',      requirePermission('hr:bonus:read'),   payCtrl.listBonuses);
+router.patch ('/bonuses/:id',  requirePermission('hr:bonus:update'), payCtrl.updateBonus);
+router.delete('/bonuses/:id',  requirePermission('hr:bonus:update'), payCtrl.deleteBonus);
+
+// Form 16 placeholder
+router.get('/employees/:id/form16', requirePermission('hr:salary:read'), payCtrl.getForm16);
+
 module.exports = router;

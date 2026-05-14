@@ -85,4 +85,39 @@ export const hrApi = {
   getTeamLeaveRequests:(params) => api.get('/hr/leave-requests/team', { params }),
   reviewLeave:         (id, data) => api.patch(`/hr/leave-requests/${id}/review`, data),
   cancelLeave:         (id)     => api.patch(`/hr/leave-requests/${id}/cancel`),
+
+  // Salary Structures (Week 18)
+  listSalaryStructures:   ()           => api.get('/hr/salary-structures'),
+  createSalaryStructure:  (data)       => api.post('/hr/salary-structures', data),
+  getSalaryStructure:     (id)         => api.get(`/hr/salary-structures/${id}`),
+  updateSalaryStructure:  (id, data)   => api.patch(`/hr/salary-structures/${id}`, data),
+  deleteSalaryStructure:  (id)         => api.delete(`/hr/salary-structures/${id}`),
+
+  // Employee Salary
+  assignSalary:     (empId, data)  => api.post(`/hr/employees/${empId}/salary`, data),
+  getSalaryHistory: (empId)        => api.get(`/hr/employees/${empId}/salary-history`),
+  getForm16:        (empId, fy)    => api.get(`/hr/employees/${empId}/form16`, { params: { fy } }),
+
+  // Payroll Runs
+  processPayroll:   (data)  => api.post('/hr/payroll/process', data),
+  listPayrollRuns:  (params) => api.get('/hr/payroll', { params }),
+  getPayrollRun:    (id)    => api.get(`/hr/payroll/${id}`),
+  disbursePayroll:  (id)    => api.patch(`/hr/payroll/${id}/disburse`),
+  getBankFile:      (id)    => api.get(`/hr/payroll/${id}/bank-file`, { responseType: 'blob' }),
+
+  // Payslips
+  listMyPayslips: ()   => api.get('/hr/me/payslips'),
+  getPayslip:     (id) => api.get(`/hr/payslips/${id}`),
+  getPayslipPDF:  (id) => api.get(`/hr/payslips/${id}/pdf`, { responseType: 'blob' }),
+
+  // Reimbursements
+  submitReimbursement:    (data)       => api.post('/hr/reimbursements', data),
+  listReimbursements:     (params)     => api.get('/hr/reimbursements', { params }),
+  reviewReimbursement:    (id, data)   => api.patch(`/hr/reimbursements/${id}/review`, data),
+
+  // Bonuses
+  createBonus:  (data)       => api.post('/hr/bonuses', data),
+  listBonuses:  (params)     => api.get('/hr/bonuses', { params }),
+  updateBonus:  (id, data)   => api.patch(`/hr/bonuses/${id}`, data),
+  deleteBonus:  (id)         => api.delete(`/hr/bonuses/${id}`),
 };

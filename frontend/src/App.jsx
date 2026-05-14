@@ -45,6 +45,12 @@ import LeaveApprovalsPage     from './modules/hr/pages/LeaveApprovalsPage'
 import HRAttendancePage       from './modules/hr/pages/HRAttendancePage'
 import HolidayCalendarPage    from './modules/hr/pages/HolidayCalendarPage'
 import LeaveTypeConfigPage    from './modules/hr/pages/LeaveTypeConfigPage'
+import SalaryStructurePage    from './modules/hr/pages/SalaryStructurePage'
+import EmployeeSalaryPage     from './modules/hr/pages/EmployeeSalaryPage'
+import PayrollRunPage         from './modules/hr/pages/PayrollRunPage'
+import MyPayslipsPage         from './modules/hr/pages/MyPayslipsPage'
+import ReimbursementsPage     from './modules/hr/pages/ReimbursementsPage'
+import BonusManagementPage    from './modules/hr/pages/BonusManagementPage'
 
 import DevProjectListPage        from './modules/dev/pages/DevProjectListPage'
 import DevProjectDetailPage      from './modules/dev/pages/DevProjectDetailPage'
@@ -125,6 +131,14 @@ function AppRoutes() {
           <Route path="hr/leaves/approvals"    element={<ProtectedRoute minRole="DEPT_HEAD"><LeaveApprovalsPage /></ProtectedRoute>} />
           <Route path="hr/holidays"            element={<ProtectedRoute minRole="ADMIN"><HolidayCalendarPage /></ProtectedRoute>} />
           <Route path="hr/leave-types"         element={<ProtectedRoute minRole="ADMIN"><LeaveTypeConfigPage /></ProtectedRoute>} />
+
+          {/* HR — Payroll (Week 18) */}
+          <Route path="hr/salary-structures"  element={<ProtectedRoute minRole="ADMIN"><SalaryStructurePage /></ProtectedRoute>} />
+          <Route path="hr/employees/:id/salary" element={<ProtectedRoute minRole="ADMIN"><EmployeeSalaryPage /></ProtectedRoute>} />
+          <Route path="hr/payroll"            element={<ProtectedRoute minRole="ADMIN"><PayrollRunPage /></ProtectedRoute>} />
+          <Route path="hr/me/payslips"        element={<MyPayslipsPage />} />
+          <Route path="hr/reimbursements"     element={<ReimbursementsPage />} />
+          <Route path="hr/bonuses"            element={<ProtectedRoute minRole="ADMIN"><BonusManagementPage /></ProtectedRoute>} />
 
           {/* Dev */}
           <Route path="dev/dashboard"    element={<DevDeveloperDashboardPage />} />

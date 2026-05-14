@@ -46,3 +46,10 @@ require('./Holiday');
 require('./LeaveType');
 require('./LeaveBalance');
 require('./LeaveRequest');
+// Phase 5 Week 18 — Payroll
+require('./SalaryStructure');
+require('./EmployeeSalary');
+require('./PayrollRun');
+require('./Payslip');
+require('./Reimbursement');
+require('./Bonus');

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { LayoutDashboard, Users, Building2, Shield, Settings, ScrollText, UserCircle, ChevronRight, Target, Handshake, PieChart, BarChart2, MonitorCheck, Megaphone, SlidersHorizontal, FileText, Palette, Inbox, ImageIcon, Layers, Code2, FolderKanban, MailOpen, UserSearch, XCircle, Upload, UserCheck, UsersRound, CalendarDays, Palmtree, CheckSquare, Activity, CalendarRange } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Shield, Settings, ScrollText, UserCircle, ChevronRight, Target, Handshake, PieChart, BarChart2, MonitorCheck, Megaphone, SlidersHorizontal, FileText, Palette, Inbox, ImageIcon, Layers, Code2, FolderKanban, MailOpen, UserSearch, XCircle, Upload, UserCheck, UsersRound, CalendarDays, Palmtree, CheckSquare, Activity, CalendarRange, DollarSign, Banknote, Receipt, Gift } from 'lucide-react'
 
 const ROLE_ORDER = ['TEAM_MEMBER', 'DEPT_HEAD', 'SUBADMIN', 'ADMIN', 'SUPERADMIN']
 
@@ -58,6 +58,11 @@ const NAV_SECTIONS = [
       { to: '/hr/candidates/rejected', label: 'Rejected Pool',    icon: XCircle,     minRole: 'DEPT_HEAD' },
       { to: '/hr/candidates/import',   label: 'Bulk Import',      icon: Upload,      minRole: 'DEPT_HEAD' },
       { to: '/hr/me',                  label: 'My HR Profile',    icon: UserCheck,   minRole: 'TEAM_MEMBER' },
+      { to: '/hr/me/payslips',         label: 'My Payslips',      icon: FileText,    minRole: 'TEAM_MEMBER' },
+      { to: '/hr/reimbursements',      label: 'Reimbursements',   icon: Receipt,     minRole: 'TEAM_MEMBER' },
+      { to: '/hr/payroll',             label: 'Payroll Runs',     icon: Banknote,    minRole: 'ADMIN' },
+      { to: '/hr/salary-structures',   label: 'Salary Structures',icon: DollarSign,  minRole: 'ADMIN' },
+      { to: '/hr/bonuses',             label: 'Bonuses',          icon: Gift,        minRole: 'ADMIN' },
     ],
   },
   {
