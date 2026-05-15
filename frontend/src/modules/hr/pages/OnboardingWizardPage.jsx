@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { hrApi } from '../../../api/hr.api'
+import api from '../../../api/axios'
 import { Check, ArrowLeft, ArrowRight, UserCheck } from 'lucide-react'
 
 const STEPS = ['Basic Info', 'Employment', 'Salary & Bank', 'Confirm']
@@ -81,10 +82,10 @@ export default function OnboardingWizardPage() {
       }).catch(() => {})
     }
     Promise.all([
-      fetch('/api/v1/departments', { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }).then(r => r.json()),
+      api.get('/departments'),
       hrApi.listEmployees({ limit: 100 }),
     ]).then(([d, e]) => {
-      setDepts(d.data?.departments || [])
+      setDepts(d.data?.data?.departments || [])
       setEmployees(e.data?.data?.employees || [])
     }).catch(() => {})
   }, [candidateId])
@@ -135,7 +136,12 @@ export default function OnboardingWizardPage() {
           uanNumber:    form.uanNumber,
         },
       }
-      const r = await hrApi.onboardEmployee(candidateId || 'none', payload)
+      if (!candidateId) {
+        setError('No candidate selected. Go to Candidates list and click "Onboard" on a candidate.')
+        setSaving(false)
+        return
+      }
+      const r = await hrApi.onboardEmployee(candidateId, payload)
       navigate(`/hr/employees/${r.data.data.employee._id}`)
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Onboarding failed')
