@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { LayoutDashboard, Users, Building2, Shield, Settings, ScrollText, UserCircle, ChevronRight, Target, Handshake, PieChart, BarChart2, MonitorCheck, Megaphone, SlidersHorizontal, FileText, Palette, Inbox, ImageIcon, Layers, Code2, FolderKanban, MailOpen, UserSearch, XCircle, Upload, UserCheck, UsersRound, CalendarDays, Palmtree, CheckSquare, Activity, CalendarRange, DollarSign, Banknote, Receipt, Gift } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Shield, Settings, ScrollText, UserCircle, ChevronRight, Target, Handshake, PieChart, BarChart2, MonitorCheck, Megaphone, SlidersHorizontal, FileText, Palette, Inbox, ImageIcon, Layers, Code2, FolderKanban, MailOpen, UserSearch, XCircle, Upload, UserCheck, UsersRound, CalendarDays, Palmtree, CheckSquare, Activity, CalendarRange, DollarSign, Banknote, Receipt, Gift, Flag, ClipboardList, Users2, AlertTriangle, TrendingUp, LogOut, Building, BookOpen, ClipboardCheck } from 'lucide-react'
 
 const ROLE_ORDER = ['TEAM_MEMBER', 'DEPT_HEAD', 'SUBADMIN', 'ADMIN', 'SUPERADMIN']
 
@@ -63,6 +63,28 @@ const NAV_SECTIONS = [
       { to: '/hr/payroll',             label: 'Payroll Runs',     icon: Banknote,    minRole: 'ADMIN' },
       { to: '/hr/salary-structures',   label: 'Salary Structures',icon: DollarSign,  minRole: 'ADMIN' },
       { to: '/hr/bonuses',             label: 'Bonuses',          icon: Gift,        minRole: 'ADMIN' },
+      { to: '/hr/performance',         label: 'Performance',      icon: TrendingUp,  minRole: 'TEAM_MEMBER' },
+      { to: '/hr/me/evaluation',       label: 'Self Evaluation',  icon: ClipboardList, minRole: 'TEAM_MEMBER' },
+      { to: '/hr/peer-feedback',       label: 'Peer Feedback',    icon: Users2,      minRole: 'TEAM_MEMBER' },
+      { to: '/hr/one-on-ones',         label: '1-on-1 Meetings',  icon: Users2,      minRole: 'TEAM_MEMBER' },
+      { to: '/hr/kras',                label: 'KRA Master',       icon: Flag,        minRole: 'DEPT_HEAD' },
+      { to: '/hr/performance-cycles',  label: 'Perf. Cycles',     icon: CalendarRange, minRole: 'ADMIN' },
+      { to: '/hr/pips',                label: 'PIP Management',   icon: AlertTriangle, minRole: 'DEPT_HEAD' },
+      { to: '/hr/me/resignation',        label: 'Submit Resignation',  icon: LogOut,        minRole: 'TEAM_MEMBER' },
+      { to: '/hr/me/onboarding',        label: 'My Onboarding',       icon: ClipboardCheck,minRole: 'TEAM_MEMBER' },
+      { to: '/hr/onboarding-templates', label: 'Onboarding Templates',icon: ClipboardList, minRole: 'ADMIN' },
+      { to: '/hr/onboarding-progress',  label: 'Onboarding Progress', icon: TrendingUp,    minRole: 'DEPT_HEAD' },
+      { to: '/hr/dashboard',            label: 'HR Dashboard',        icon: Building,      minRole: 'ADMIN' },
+    ],
+  },
+  {
+    label: 'SOPs',
+    items: [
+      { to: '/sops',               label: 'SOP Library',       icon: BookOpen,      minRole: 'TEAM_MEMBER' },
+      { to: '/sops/me',            label: 'My SOPs',           icon: ClipboardCheck,minRole: 'TEAM_MEMBER' },
+      { to: '/sops/approvals',     label: 'Approval Inbox',    icon: ClipboardCheck,minRole: 'DEPT_HEAD' },
+      { to: '/sops/ack-matrix',    label: 'Ack. Matrix',       icon: Users,         minRole: 'DEPT_HEAD' },
+      { to: '/sops/categories',    label: 'Categories',        icon: Layers,        minRole: 'ADMIN' },
     ],
   },
   {

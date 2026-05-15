@@ -100,8 +100,8 @@ ams/
 
 ## Modules to Build (in order)
 
-> ⚠️ **CURRENT FOCUS: PHASE 5 ONLY (HR Full Module).**
-> Phase 1, 2, 3 & 4 complete ✅. Phase 6 listed below for context only. **DO NOT start Phase 6 work until Ankur explicitly says so.** Phase 5 ko solid banao, deploy karo, test karo — Ankur khud bolega "Phase 6 shuru karo" tab next phase plan karenge.
+> 🏁 **CURRENT FOCUS: PHASE 6 — FINAL PHASE (SOPs + Polish + Launch).**
+> Phase 1, 2, 3, 4 & 5 complete ✅. **This is the last phase.** After this, AMS is production-ready and complete.
 
 | # | Module | Phase | Status |
 |---|--------|-------|--------|
@@ -110,8 +110,8 @@ ams/
 | C | DM (Daily Tasks + Audit Reports, 15 platforms) | 3 | ✅ **DONE** — Working & deployed |
 | D | GD (Task inbox, revisions, DM-routed delivery) | 3 | ✅ **DONE** — Working & deployed |
 | E | Development (Projects, Tasks, Bugs, Milestones) | 4 | ✅ **DONE** — Working & deployed |
-| F | HR Full (Candidate ATS + Employee + Attendance + Payroll + Performance) | 5 | **🟢 ACTIVE — Build this** |
-| G | SOPs / Office Manual | 6 | ⏸️ Hold — future phase |
+| F | HR Full (Candidate ATS + Employee + Attendance + Payroll + Performance) | 5 | ✅ **DONE** — Working & deployed |
+| G | SOPs / Office Manual + Polish + Launch | 6 | **🟢 ACTIVE — Final build** |
 
 **Detailed module specs:** See `AMS_Full_Blueprint.md` in the project root or repo wiki.
 
@@ -362,288 +362,302 @@ VITE_API_URL=http://localhost:5000/api/v1
 
 ---
 
-## Current Phase: PHASE 5 — HR Full Module (BIGGEST PHASE)
+## Phase 5 — COMPLETED ✅ (Reference)
 
-**Goal:** Build the complete HR system covering the full lifecycle — Candidate (ATS) → Employee (Onboarding) → Attendance/Leave → Payroll → Performance → Exit. This is the biggest module in AMS.
+**What was built (already working — do not touch unless needed for integration):**
+- Models: Candidate, CandidateFollowup, CandidateInterview, Employee, EmployeeDocument, EmployeeFamilyMember, Attendance, Holiday, LeaveType, LeaveBalance, LeaveRequest, SalaryStructure, EmployeeSalary, PayrollRun, Payslip, Reimbursement, Bonus, KRA, PerformanceCycle, Goal, SelfEvaluation, ManagerEvaluation, PeerFeedback, OneOnOne, PIP, ExitInterview, FullAndFinalSettlement
+- 5 profile skill matrices (Sales/DM/GD/Dev/HR) seeded
+- Candidate ATS with bulk import + duplicate detection + interview scheduler
+- Employee onboarding wizard (Candidate → Employee with auto-User creation)
+- Document locker on Google Drive (per-employee folder structure)
+- Attendance check-in/out + IP restriction + manual override
+- Leave types + balances + approval workflow + manager dashboard
+- Payroll engine: salary structures + monthly run + payslip PDFs + bank disbursement file
+- Performance: quarterly cycles + KRAs + self+manager evaluations + 360 feedback + PIP
+- Exit workflow: resignation + checklists + F&F + relieving letter
+- Employee self-service portal
+- HR Master Dashboard
+- Sensitive data encrypted (PAN, Aadhaar, bank, salary)
 
-**⚠️ Duration:** 6 weeks (Week 15-20). Pace yourself. Do not rush.
-
-**Scope (locked):**
-- ✅ Candidate Management (ATS): full hiring pipeline from sourcing to offer
-- ✅ Employee Management: from joining to exit
-- ✅ Attendance Tracking: web check-in/out (no biometric in Phase 5)
-- ✅ Leave Management: types, balances, approval workflow
-- ✅ Payroll: salary structures, monthly run, payslip PDF, TDS/PF/ESI display
-- ✅ Performance Management: KRAs, evaluations, appraisals, PIP
-- ✅ Document Locker: per employee secure storage on Google Drive
-- ✅ Employee Self-Service Portal: profile, leaves, payslips, performance
-- ✅ Exit Management: exit interview, full-and-final settlement display
-- ❌ Biometric integration — Phase 5 mein nahi (future)
-- ❌ Tax filing automation — Phase 5 mein nahi (display only)
-- ❌ Mobile app for employees — out of scope
-
-### Week 15 Deliverables — Candidate ATS Module
-
-**Backend:**
-1. `Candidate` model (from Ams_Final.xlsx HR sheet):
-   - Personal: firstName, middleName, lastName, dob, maritalStatus (Married/Unmarried/Other), gender (Male/Female/Other)
-   - Contact: email, phone, altPhone, address
-   - Background: education, lastSalary, previousCompany, previousProfile, totalExperience, expectedSalary
-   - Application: appliedDate, leadSource (Internshala/Workindia/Indeed/LinkedIn/Walk-in/Reference/Others), referenceName
-   - Profile: appliedProfile (Sales/DM/GD/Development/HR/Admin), appliedFor (Internship/Full Time/Part Time/Freelance/WFH)
-   - Status: status (New/Shortlisted/Interview Done/Selected/Rejected/On Hold), priority (High/Medium/Low)
-   - Communication: callingStatus (Ringing/Busy/Not Connected/Rejected/Switched Off), notes
-   - Files: cvLink (gdrive), portfolioLink (gdrive — for GD candidates)
-   - Skills: skillSet (Mixed — different per profile, see skill matrices below)
-   - Languages: languagesKnown[]
-   - Duplicate flag: previouslyApplied (boolean — auto-detect)
-2. `CandidateFollowup` model: { candidateId, scheduledAt, notes, completedAt, completedBy, status }
-3. `CandidateInterview` model: { candidateId, round, scheduledAt, interviewer (userId), mode (in-person/video/phone), feedback, rating, status (scheduled/completed/cancelled/no-show) }
-4. **Skill Matrices per Profile (seed data):**
-   - **Graphic & Video Editor:** Photoshop, Premiere Pro, After Effects, CorelDraw, Illustration, CapCut, Final Cut Pro, Canva, 2D/3D Animation, AI Image Gen, AI Video Gen
-   - **DM:** Social Media (FB/IG/X/LinkedIn/YT/Threads), SEO (On/Off/Technical), Ads (Meta/Google/LinkedIn), GMB, Content Writing, AI Tools, Google Analytics, Influencer Marketing, E-commerce (Amazon/Flipkart/Meesho/Myntra/Other)
-   - **Development:** Frontend (HTML/CSS/JS/React/WordPress/JQuery/Bootstrap/React Native/Tailwind/Flutter/3JS/Next.js), Backend (Express/Node/PHP/Python/MySQL/MongoDB/SQL), E-commerce (Shopify/WooCommerce), Tools (VS Code/Github/Postman/AWS/Docker/Kubernetes), AI
-   - **Sales:** Communication, Lead Generation, Client Conversion, Computer, Negotiation, Convincing, Problem Solving
-   - **HR:** Recruitment, JD Writing, Interviewing, HR Documentation, Communication, Policy Creation, Resume Screening, Decision Making, Attendance Mgmt
-5. APIs:
-   - Candidate CRUD: `/api/v1/hr/candidates`
-   - Bulk import (Excel/CSV with mobile+email dedup)
-   - Single candidate add (manual)
-   - Candidate from website form (placeholder API for future career page)
-   - Follow-up CRUD: `/api/v1/hr/candidates/:id/followups`
-   - Interview CRUD: `/api/v1/hr/candidates/:id/interviews`
-   - Status transition: `/api/v1/hr/candidates/:id/status`
-   - Rejected pool query: GET `/api/v1/hr/candidates?status=rejected&search=...`
-   - Job-portal-style filters: skills[], gender, salaryRange, experience, location, profile, status
-6. Permissions: `hr:candidate:create/read/update/delete`, `hr:interview:*`, `hr:followup:*`, `hr:bulk_import:create`
-7. Duplicate detection: phone + email cross-check; show "Previously Applied" badge
-8. Audit logging on all writes
-
-**Frontend:**
-1. HR module folder: `frontend/src/modules/hr/`
-2. Pages:
-   - Candidate List (job-portal style with rich filters)
-   - Candidate Detail with tabs: Profile / Skills / Follow-ups / Interviews / Documents / Activity
-   - Candidate Create/Edit form (multi-step: Personal → Background → Application → Skills)
-   - Bulk Import UI
-   - Rejected Pool (separate view with re-activate option)
-   - Interview Scheduler (calendar view)
-3. Skill matrix UI: profile-specific checklist with proficiency level (Beginner/Intermediate/Expert)
-4. CV/Portfolio upload to Google Drive
-5. "Previously Applied" warning banner on duplicate detection
-6. Add "HR" sidebar entry visible to users with `hr:*` permissions
-
-### Week 16 Deliverables — Employee Management + Document Locker
-
-**Backend:**
-1. `Employee` model (extends candidate data on Selection):
-   - employeeId (auto: ANK-EMP-001 format)
-   - userId (ref User — must have AMS login if needed)
-   - candidateId (ref Candidate — auto-migrated)
-   - personalInfo (firstName, lastName, dob, gender, maritalStatus, bloodGroup, emergencyContact)
-   - contactInfo (email, phone, altPhone, currentAddress, permanentAddress)
-   - employmentInfo (designation, departmentId, reportingManagerId, dateOfJoining, employmentType, employmentStatus, probationEndDate, confirmationDate, officeLocation)
-   - bankDetails (accountNumber, ifsc, bankName, branch — encrypted)
-   - statutoryInfo (panNumber, aadhaarNumber, uanNumber, esiNumber, pfNumber — encrypted)
-   - salaryStructureId (ref SalaryStructure — see Week 18)
-   - exitInfo (exitDate, exitReason, finalSettlement, exitInterviewId — only on exit)
-2. `EmployeeDocument` model: { employeeId, type (offer_letter/joining_letter/id_proof/address_proof/education/experience/relieving/other), name, gdriveFileId, gdriveLink, uploadedBy, uploadedAt, expiresAt (optional for licenses) }
-3. `EmployeeFamilyMember` model (optional): { employeeId, name, relation, dob, contact, isNominee }
-4. APIs:
-   - Onboard from candidate: POST `/api/v1/hr/employees/onboard/:candidateId`
-   - Employee CRUD: `/api/v1/hr/employees`
-   - Document upload/list: `/api/v1/hr/employees/:id/documents`
-   - Exit workflow: POST `/api/v1/hr/employees/:id/exit`
-   - Employee self-service: GET `/api/v1/hr/me/profile`, PATCH `/api/v1/hr/me/profile` (with HR approval)
-5. Auto-create AMS User account on onboarding (default role: team member, dept-wise)
-6. Sensitive data encryption: PAN, Aadhaar, bank details (use field-level encryption in Mongoose)
-7. Permissions: `hr:employee:create/read/update/delete/exit`, `hr:document:*`, `hr:self:read/update`
-
-**Frontend:**
-1. Pages:
-   - Employee Directory (list with filters: dept, designation, status, location)
-   - Employee Detail with tabs: Profile / Employment / Salary (gated) / Documents / Family / Attendance / Leaves / Payslips / Performance / Activity
-   - Employee Onboarding Wizard (multi-step: Basic Info → Documents → Salary → Bank → Confirm)
-   - Exit Workflow Page
-2. Document Locker UI with type-wise categorization, upload progress, expiry alerts
-3. Employee Self-Service Portal:
-   - My Profile (view + request edit)
-   - My Documents
-   - My Salary Slips (link to Week 18)
-   - Update personal info (with HR approval flow)
-4. Manager view: "My Team" page showing direct reports
-
-### Week 17 Deliverables — Attendance + Leave Management
-
-**Backend:**
-1. `Attendance` model: { employeeId, date, checkIn (timestamp), checkOut (timestamp), workHours (calculated), status (present/absent/half_day/late/wfh/holiday/leave), notes, ipAddress, location (optional), modifiedBy (userId — if HR manual override) }
-2. `Holiday` model: { date, name, type (national/regional/optional), applicableTo (all/specific_offices) }
-3. `LeaveType` model: { name, code (CL/SL/EL/ML/PL/COMP/LOP), annualQuota, monthlyAccrualEnabled, carryForwardEnabled, maxCarryForward, halfDayAllowed, requireDocuments }
-4. `LeaveBalance` model: { employeeId, leaveTypeId, year, allocated, used, remaining, carryForwarded }
-5. `LeaveRequest` model: { employeeId, leaveTypeId, startDate, endDate, days (auto-calc excluding holidays/weekends), reason, attachments, status (pending/approved/rejected/cancelled/withdrawn), reviewedBy, reviewedAt, reviewerComments }
-6. APIs:
-   - Attendance: POST `/api/v1/hr/attendance/check-in`, POST `/check-out`, GET `/api/v1/hr/attendance?employeeId=&from=&to=`
-   - Manual attendance entry (HR only): POST `/api/v1/hr/attendance/manual`
-   - Holiday CRUD (Superadmin): `/api/v1/hr/holidays`
-   - Leave types CRUD (Superadmin): `/api/v1/hr/leave-types`
-   - Leave balance: GET `/api/v1/hr/employees/:id/leave-balances`
-   - Apply leave: POST `/api/v1/hr/leave-requests`
-   - Approve/reject (manager): PATCH `/api/v1/hr/leave-requests/:id/review`
-   - Leave history: GET `/api/v1/hr/employees/:id/leave-history`
-   - Team leaves view (for managers): GET `/api/v1/hr/leave-requests/team`
-7. Workflow: Employee applies → Reporting Manager approves/rejects → HR can override → Attendance auto-marks "leave" for those dates
-8. IP restriction option for check-in (only from office network — configurable)
-9. Permissions: `hr:attendance:*`, `hr:leave:*`, `hr:holiday:*`
-
-**Frontend:**
-1. Pages:
-   - Employee: Check-in/out widget (top of dashboard), My Attendance calendar, Apply Leave form, My Leave History
-   - Manager: Team Attendance (matrix view: employees × dates), Pending Leave Approvals
-   - HR: Attendance overview (all employees), Manual entry, Holiday calendar management, Leave types config
-2. Calendar views (monthly grid with color codes per status)
-3. Leave application modal: select type → dates → days auto-calc → reason → submit
-4. Approval inbox for managers with quick approve/reject
-5. Leave balance widget (dashboard)
-
-### Week 18 Deliverables — Payroll
-
-**Backend:**
-1. `SalaryStructure` model: { name, basicPercent, hraPercent, allowances[] (name, amount/percent, taxable), deductions[] (name, amount/percent, type) }
-2. `EmployeeSalary` model: { employeeId, structureId, ctc, basic, hra, allowancesBreakdown, deductionsBreakdown, netSalary, effectiveFrom, revisedReason }
-3. `PayrollRun` model: { month, year, status (draft/processed/disbursed), processedBy, processedAt, totalEmployees, totalAmount }
-4. `Payslip` model: { payrollRunId, employeeId, workingDays, paidDays, lopDays, otHours, grossEarnings, totalDeductions, netPay, tdsAmount, pfAmount, esiAmount, generatedPdfLink (gdrive) }
-5. `Reimbursement` model: { employeeId, type (travel/food/internet/medical/other), amount, billDate, billAttachment, status (pending/approved/rejected/paid), submittedAt, reviewedBy, reviewedAt }
-6. `Bonus` model: { employeeId, type (performance/festival/referral/other), amount, reason, payableMonth, payableYear, status (planned/included_in_payroll/disbursed) }
-7. APIs:
-   - Salary structure CRUD (Superadmin): `/api/v1/hr/salary-structures`
-   - Assign salary to employee: POST `/api/v1/hr/employees/:id/salary`
-   - Salary history: GET `/api/v1/hr/employees/:id/salary-history`
-   - Process payroll: POST `/api/v1/hr/payroll/process` (month, year) — calculates LOP from attendance, applies deductions, generates payslips
-   - Generate payslip PDF: GET `/api/v1/hr/payslips/:id/pdf` (with ANK branding)
-   - Mark payroll disbursed: PATCH `/api/v1/hr/payroll/:id/disburse`
-   - Bank disbursement file export: GET `/api/v1/hr/payroll/:id/bank-file` (CSV in bank-ready format)
-   - Reimbursement CRUD: `/api/v1/hr/reimbursements`
-   - Bonus CRUD: `/api/v1/hr/bonuses`
-   - Form 16 placeholder: GET `/api/v1/hr/employees/:id/form16?fy=YYYY-YY` (display only, no e-filing)
-8. Payroll engine logic:
-   - Pull attendance for the month
-   - Calculate LOP days
-   - Apply pro-rated salary
-   - Add bonuses + reimbursements approved this cycle
-   - Calculate TDS (slab-based, basic logic — not full IT compliance)
-   - Calculate PF (12% of basic, capped), ESI (if applicable)
-   - Generate payslip per employee
-   - Soft-deploy first as "draft" for HR review, then publish
-9. Permissions: STRICT — `hr:salary:read/update` (Superadmin + Admin), `hr:payroll:process/disburse`, `hr:reimbursement:*`, `hr:bonus:*`, `hr:self:payslip:read` (employee own only)
-10. Sensitive data: encrypt salary at rest
-
-**Frontend:**
-1. Pages:
-   - Salary Structure Master (Superadmin)
-   - Employee Salary Assignment + Revision History
-   - Payroll Run Dashboard (current month status)
-   - Payroll Process Wizard (Step 1: Review attendance → Step 2: Adjustments → Step 3: Preview → Step 4: Approve & Generate)
-   - Payslip List (employee view: my payslips)
-   - Reimbursement Submission (employee) + Approval (manager/HR)
-   - Bonus Management (HR)
-2. Payslip PDF download
-3. Bank disbursement file download
-4. Salary visibility STRICTLY role-gated (Team members see only their own)
-
-### Week 19 Deliverables — Performance Management
-
-**Backend:**
-1. `KRA` model (Key Result Area): { name, description, applicableRoles[], measurableUnits, weightagePercent }
-2. `PerformanceCycle` model: { name, type (quarterly/half_yearly/annual), startDate, endDate, status (planned/active/in_review/completed) }
-3. `Goal` model: { employeeId, cycleId, title, description, targetValue, achievedValue, kraId (optional), status (set/in_progress/achieved/missed), weightagePercent }
-4. `SelfEvaluation` model: { employeeId, cycleId, goals (with self-rating + comments), strengths, improvements, trainingNeeds, submittedAt }
-5. `ManagerEvaluation` model: { employeeId, managerId, cycleId, goalRatings (per goal), overallRating (1-5), strengths, improvements, increment_recommendation, promotion_recommendation, submittedAt }
-6. `PeerFeedback` model (360-degree, optional): { evaluateeId, evaluatorId, cycleId, anonymous (boolean), ratings, comments, submittedAt }
-7. `OneOnOne` model: { managerId, employeeId, scheduledAt, agenda, notes, actionItems[], conductedAt }
-8. `PIP` model (Performance Improvement Plan): { employeeId, startDate, endDate, reason, expectations[], reviewer, status (active/passed/failed), reviews[] }
-9. APIs:
-   - KRA CRUD (HR + role heads): `/api/v1/hr/kras`
-   - Performance cycle setup: `/api/v1/hr/performance-cycles`
-   - Goals: `/api/v1/hr/employees/:id/goals?cycleId=`
-   - Self-evaluation: `/api/v1/hr/me/evaluations/:cycleId`
-   - Manager evaluation: `/api/v1/hr/employees/:id/manager-evaluation/:cycleId`
-   - Peer feedback (anonymous): `/api/v1/hr/peer-feedback`
-   - 1-on-1 meetings: `/api/v1/hr/one-on-ones`
-   - PIP CRUD: `/api/v1/hr/pips`
-   - Performance reports: `/api/v1/hr/reports/performance`
-10. Permissions: `hr:performance:*`, `hr:self:evaluation:*`, `hr:peer:create/read`
-
-**Frontend:**
-1. Pages:
-   - Performance Cycle Setup (HR)
-   - KRA Master (role-wise)
-   - Goal Setting (employee + manager view)
-   - Self-Evaluation Form
-   - Manager Evaluation Form (with prior self-eval visible)
-   - 360-feedback form (anonymous)
-   - 1-on-1 Notes
-   - PIP Management
-   - Performance Dashboard (employee — see own ratings over cycles)
-   - Manager Dashboard (team performance overview)
-   - HR Dashboard (org-wide performance distribution)
-
-### Week 20 Deliverables — Exit + Self-Service + Polish + Deploy
-
-**Backend:**
-1. `ExitInterview` model: { employeeId, conductedBy, conductedAt, reasons[] (better_opportunity/compensation/work_life/manager/role/personal/other), feedback, suggestions, wouldRecommend (yes/no), eligibleForRehire (boolean) }
-2. `FullAndFinalSettlement` model: { employeeId, exitDate, pendingSalary, leaveEncashment, gratuity, bonus, deductions, netPayable, status (pending/approved/disbursed), processedBy, processedAt }
-3. Exit workflow:
-   - Resignation submitted by employee
-   - Manager + HR acknowledgement
-   - Notice period tracking
-   - Knowledge transfer checklist
-   - Asset return checklist
-   - Document collection (relieving letter, experience certificate)
-   - F&F calculation
-   - Final approval + disbursement
-4. APIs:
-   - Resignation submission: POST `/api/v1/hr/me/resignation`
-   - Exit workflow tracking: `/api/v1/hr/employees/:id/exit-checklist`
-   - Exit interview: POST `/api/v1/hr/employees/:id/exit-interview`
-   - F&F calculation: POST `/api/v1/hr/employees/:id/full-and-final`
-   - Generate relieving letter PDF
-   - Generate experience certificate PDF
-
-**Frontend:**
-1. Resignation submission UI (employee)
-2. Exit workflow tracker (employee + HR)
-3. Exit interview form
-4. F&F approval UI
-5. Generate + download exit documents (PDFs with ANK branding)
-6. HR Master Dashboard:
-   - Total employees + by dept
-   - Joinings this month
-   - Exits this month + attrition rate
-   - Birthdays/anniversaries this week
-   - Pending leave requests
-   - Pending reimbursements
-   - Probation expiring soon
-   - Performance reviews due
-   - Open positions in pipeline (from ATS)
-7. Phase 5 testing + bug fixes + deploy
+**Integration points Phase 6 will use:**
+- `Employee` model — for SOP acknowledgements, onboarding checklist assignment
+- `Department` model — for department-wise SOP categorization
+- `User` model — every module reference
+- All Phase 1-5 modules — Phase 6 polishes them all (cross-module reports, search, performance, security audit)
 
 ---
 
-## Phase 5 Key Decisions to Confirm with Ankur Before Building
+## Current Phase: PHASE 6 — SOPs + Polish + Launch (FINAL PHASE)
 
-Before Week 15 starts, confirm:
-1. **Candidate skill matrices:** Use lists from Ams_Final.xlsx HR sheet? Any updates needed?
-2. **Employee ID format:** ANK-EMP-001 (3-digit zero-padded) or ANK-EMP-2026-001 (year-prefixed)?
-3. **Attendance method:** Web check-in only? IP-restricted to office network? Allow WFH check-in?
-4. **Leave types & quotas:** What are ANK's current leave types and annual quotas? (CL/SL/EL/ML/etc., 12/12/15 days?)
-5. **Salary structure:** Standard Basic+HRA+Allowances+Deductions, or custom for ANK?
-6. **Payroll cycle:** Calendar month (1st-end) or custom (e.g., 26th-25th)?
-7. **TDS calculation:** Display estimate only (no e-filing) — confirm?
-8. **PF/ESI applicability:** Apply for all or only employees above certain salary?
-9. **Performance cycle:** Quarterly, Half-yearly, or Annual?
-10. **360-feedback:** Include anonymous peer feedback or skip?
-11. **PIP:** Auto-trigger after consecutive low ratings or manual only?
-12. **Exit interview:** Mandatory for all exits or optional?
+**Goal:** Build the SOPs/Office Manual module + polish all 6 prior phases + final launch preparations + production deployment + team training.
+
+**⚠️ Duration:** 4 weeks (Week 21-24). This is the home stretch.
+
+**Scope (locked):**
+- ✅ SOPs / Office Manual module (full)
+- ✅ Department-wise SOP libraries with version control
+- ✅ SOP approval workflow + acknowledgement tracking
+- ✅ Onboarding checklists linking SOPs
+- ✅ Quiz/Test module for training compliance
+- ✅ Global search across all modules
+- ✅ Cross-module unified dashboard for Superadmin/Admin
+- ✅ Performance optimization (indexes, query review)
+- ✅ Security audit + penetration testing
+- ✅ Data backup + disaster recovery setup
+- ✅ Production deployment + monitoring
+- ✅ Team training + documentation
+- ✅ Go-live + parallel run
+
+### Week 21 Deliverables — SOPs Module Core
+
+**Backend:**
+1. `SOPCategory` model: { name, description, departmentId (ref Department, optional — null for company-wide), iconName, sortOrder }
+   - Seed categories: Sales SOPs, DM SOPs, GD SOPs, Dev SOPs, HR SOPs, Common (leave, dress code, ethics, IT policy, communication, office rules)
+2. `SOP` model:
+   - title, slug, categoryId, description (short)
+   - content (rich text — Markdown or HTML)
+   - currentVersion (number)
+   - status (draft / in_review / published / archived)
+   - createdBy, lastUpdatedBy, publishedBy, publishedAt
+   - applicableTo (all_employees / specific_departments / specific_roles / specific_designations)
+   - applicableIds[] (department/role/designation IDs based on applicableTo)
+   - mandatory (boolean — if true, all applicable employees must acknowledge)
+   - acknowledgementDeadlineDays (number — within how many days of publish/joining)
+   - tags[]
+   - attachments[] (gdrive file links for PDFs, videos, screenshots)
+3. `SOPVersion` model (full version history):
+   - sopId, versionNumber, content, changeLog (what changed in this version)
+   - createdBy, createdAt, publishedAt
+   - status (draft / published / archived)
+4. `SOPApproval` model (workflow):
+   - sopId, versionNumber, requestedBy, requestedAt
+   - reviewerId, reviewedAt, status (pending / approved / rejected / changes_requested)
+   - reviewComments
+5. APIs:
+   - SOP category CRUD (Superadmin + Dept Heads for own dept): `/api/v1/sops/categories`
+   - SOP CRUD: `/api/v1/sops`
+   - SOP version history: GET `/api/v1/sops/:id/versions`
+   - Submit for approval: POST `/api/v1/sops/:id/submit-for-approval`
+   - Approve/reject (Admin or Superadmin): PATCH `/api/v1/sops/:id/approve`
+   - Publish: PATCH `/api/v1/sops/:id/publish`
+   - Archive: PATCH `/api/v1/sops/:id/archive`
+   - Search SOPs: GET `/api/v1/sops/search?q=&category=&dept=`
+6. Permissions: `sops:category:*`, `sops:create/read/update/delete/publish/approve`
+7. Audit log all changes (legal requirement for policy docs)
+
+**Frontend:**
+1. SOPs module folder: `frontend/src/modules/sops/`
+2. Pages:
+   - SOP Library (filterable by category, department, tags) — main landing page
+   - SOP Detail page (read view with version history, last updated, acknowledgement status)
+   - SOP Editor (Markdown editor with preview — use `@uiw/react-md-editor` or similar)
+   - SOP Categories Management (admin)
+   - SOP Approval Inbox (for reviewers)
+3. Rich text/Markdown editor with image upload to Google Drive
+4. Version comparison view (side-by-side diff between versions)
+5. SOP search bar (full-text search across all SOPs)
+6. Add "SOPs" sidebar entry (visible to all users with `sops:read`)
+
+### Week 22 Deliverables — Acknowledgements + Onboarding Checklists + Quiz
+
+**Backend:**
+1. `SOPAcknowledgement` model:
+   - sopId, sopVersionNumber, userId (Employee/User)
+   - acknowledgedAt, ipAddress, userAgent
+   - signature (typed name or digital signature image)
+   - acknowledgementText (auto-generated: "I, [Name], have read and understood [SOP Title v.X] on [Date]")
+2. `OnboardingChecklist` model (template):
+   - name (e.g., "New Joiner Day 1", "Sales BDE Onboarding")
+   - applicableTo (all / department / role / designation)
+   - items[] (ordered checklist items)
+3. `OnboardingChecklistItem` (sub-doc or separate):
+   - title, description, type (read_sop / complete_task / submit_document / attend_meeting / online_form)
+   - sopId (optional — if type is read_sop)
+   - daysFromJoining (when this item is due)
+   - mandatory (boolean)
+   - assignedRole (HR / Reporting Manager / IT / Self)
+4. `EmployeeOnboardingProgress` model:
+   - employeeId, checklistId, startDate
+   - items[] (with completedAt, completedBy, status)
+   - overallStatus (in_progress / completed / overdue)
+5. `Quiz` model (training compliance):
+   - sopId (optional — quiz attached to specific SOP)
+   - title, description, passingScore, timeLimit (minutes)
+   - questions[] (question, type [single_choice/multi_choice/true_false], options[], correctAnswer)
+6. `QuizAttempt` model:
+   - quizId, userId, attemptedAt, score, passed (boolean), answers[], timeSpent
+7. APIs:
+   - Acknowledge SOP: POST `/api/v1/sops/:id/acknowledge`
+   - My acknowledgements: GET `/api/v1/sops/me/acknowledgements`
+   - Pending acknowledgements: GET `/api/v1/sops/me/pending`
+   - Acknowledgement report (HR/Admin): GET `/api/v1/sops/:id/acknowledgement-report`
+   - Onboarding checklist CRUD: `/api/v1/onboarding-checklists`
+   - Auto-trigger onboarding on employee join: hook into Employee onboarding (Phase 5)
+   - My onboarding: GET `/api/v1/hr/me/onboarding`
+   - Mark item complete: PATCH `/api/v1/hr/me/onboarding/items/:id/complete`
+   - Quiz CRUD: `/api/v1/quizzes`
+   - Attempt quiz: POST `/api/v1/quizzes/:id/attempts`
+   - Quiz results: GET `/api/v1/quizzes/:id/results`
+8. Auto-notification on SOP update: identify affected users → send in-app notification
+9. Auto-trigger acknowledgement requirement on mandatory SOP publish
+
+**Frontend:**
+1. Pages:
+   - My SOPs (employee view: pending acknowledgements + read)
+   - Acknowledgement modal (read content → checkbox "I have read & understood" → type name → submit)
+   - Onboarding Checklist (employee view: progress bar, items by day)
+   - Onboarding Templates Management (HR)
+   - HR view: who has acknowledged what (matrix view)
+   - Quiz Taker UI
+   - Quiz Builder UI (admin)
+   - Quiz Results dashboard
+2. SOP update banner ("New version published — please review and acknowledge")
+3. Onboarding progress widget on new employee dashboard
+4. Onboarding overdue alerts to HR + Reporting Manager
+
+### Week 23 Deliverables — Cross-Module Polish + Global Search + Master Dashboard
+
+**Backend:**
+1. Global search API: GET `/api/v1/search?q=&modules=`
+   - Searches across: leads, clients, candidates, employees, dev_projects, sops, deals, tasks
+   - Returns categorized results with permission filtering (only show what user can see)
+   - Use MongoDB text indexes on key fields
+2. Cross-module dashboard APIs:
+   - Superadmin master dashboard: `/api/v1/dashboard/master` (revenue, pipeline, employees, projects, attendance, pending approvals — single payload)
+   - Admin dashboard: similar but financial-sensitive filtered
+3. Performance optimization:
+   - Review all collections for missing indexes
+   - Add compound indexes for common filter combinations
+   - Slow query analysis (mongoose middleware to log queries >100ms)
+   - Add response caching for static-ish endpoints (department list, services catalog, etc.) — simple in-memory cache, no Redis
+4. Reports module consolidation:
+   - Unified reports API: `/api/v1/reports?type=&filters=`
+   - Export to CSV/Excel/PDF for all major reports
+5. Notification preferences (per user):
+   - User can mute certain event types
+   - Daily digest option for non-urgent notifications
+6. Cleanup utilities:
+   - Soft-deleted record auto-archive after 90 days
+   - Audit log retention policy (keep for 7 years, archive older)
+   - Orphaned file cleanup on Google Drive (files not linked to any record)
+
+**Frontend:**
+1. Global search bar in topbar (always visible) — keyboard shortcut Cmd+K / Ctrl+K
+   - Results grouped by module
+   - Recent searches saved
+2. Master Dashboard (Superadmin landing page):
+   - Revenue widget (MTD vs target)
+   - Pipeline value
+   - New leads + conversions
+   - Employee count + attrition
+   - Attendance summary today
+   - Pending approvals across modules
+   - Renewals due
+   - Recent activity feed
+   - Quick actions (Add Lead, Add Candidate, Create Project, etc.)
+3. Admin Dashboard (similar, slightly filtered)
+4. Reports Center: unified reports across modules with date range + filters + export
+5. Notification preferences page
+6. UI polish: loading states, empty states, error boundaries, accessibility (keyboard nav, ARIA labels)
+7. Mobile-responsive tweaks (not full mobile, but key pages should work on tablet)
+
+### Week 24 Deliverables — Security + Deploy + Training + Launch
+
+**Backend:**
+1. Security audit:
+   - Run automated scans (npm audit, snyk, OWASP ZAP)
+   - Check all routes have correct RBAC
+   - Verify encryption at rest (DB) + in transit (HTTPS only)
+   - Rate limiting on auth endpoints (already in Phase 1 — verify)
+   - Penetration testing checklist (SQL injection equivalent for Mongo, XSS, CSRF, IDOR)
+2. Backup & Disaster Recovery:
+   - Daily MongoDB Atlas auto-backup verified (or mongodump cron if self-hosted)
+   - Backup retention: 30 days
+   - Restore drill (test restoring backup to staging)
+   - Document DR procedure (RTO, RPO)
+3. Monitoring setup:
+   - Sentry for error tracking
+   - UptimeRobot for uptime monitoring
+   - Health check endpoint: GET `/api/v1/health`
+   - Custom alerting (e.g., notify Ankur if API down >5 min)
+4. Logging:
+   - Structured JSON logs
+   - Log rotation
+   - Separate logs: app logs, audit logs, security logs
+5. Production environment setup:
+   - Production MongoDB (Atlas M10+ or self-hosted with replica)
+   - Production server (AWS EC2 / DigitalOcean)
+   - Domain: ams.ankdigitalmedia.com
+   - SSL certificate (Let's Encrypt auto-renew)
+   - Environment variables locked
+   - Process manager: PM2 with cluster mode
+   - Nginx reverse proxy
+   - Firewall rules
+6. Final data migration:
+   - If existing data in Excel/old tools, plan migration scripts
+   - Parallel run period: 2 weeks (old + new together)
+
+**Frontend:**
+1. Build optimization (code splitting, lazy loading, tree shaking)
+2. PWA basics (offline page, app icon, manifest)
+3. SEO basics (meta tags — even internal app, helps with bookmarks)
+4. Error tracking integration (Sentry)
+5. Analytics (basic — page views, feature usage)
+6. Final UI polish across all modules
+
+**Documentation:**
+1. **End-user manuals** (department-wise):
+   - Sales team manual (how to use CRM)
+   - DM team manual (daily tasks + audit reports)
+   - GD team manual (task inbox)
+   - Dev team manual (projects + tasks)
+   - HR manual (full HR cycle)
+   - Manager manual (approvals + dashboards)
+   - Employee self-service manual
+2. **Admin manual** (Ankur + Admin):
+   - User management
+   - Permission cascade
+   - Master data management (services, platforms, holidays, leave types, salary structures)
+   - SOP management
+   - Reports + dashboards
+3. **Technical documentation**:
+   - API reference (auto-generated from code if possible)
+   - Database schema
+   - Deployment guide
+   - Backup/restore procedure
+   - Troubleshooting guide
+   - Security playbook
+
+**Training:**
+1. Department-wise training sessions (1-2 hours each)
+2. Hands-on walkthrough with real scenarios
+3. Q&A sessions
+4. Power users / champions in each dept identified
+5. Internal support channel (WhatsApp group or in-app chat)
+
+**Launch:**
+1. Soft launch: enable for HR + Sales team first (1 week)
+2. Full launch: all 5 departments
+3. Decommission old tools (Excel sheets, WhatsApp groups for tracking)
+4. Post-launch support window: 30 days dedicated developer availability
+
+---
+
+## Phase 6 Key Decisions to Confirm with Ankur Before Building
+
+Before Week 21 starts, confirm:
+1. **SOP categories:** Use suggested list (Sales/DM/GD/Dev/HR + Common) or customize?
+2. **SOP approval workflow:** Single-level (Dept Head approves) or two-level (Dept Head + Admin)?
+3. **Acknowledgement signature:** Typed name + checkbox (simple) OR digital signature drawing (more formal)?
+4. **Onboarding checklist templates:** How many templates initially? (Recommend: 1 Common + 5 dept-specific = 6 templates)
+5. **Quiz module:** Mandatory for Phase 6 OR can defer to post-launch enhancement?
+6. **Global search scope:** All modules OR start with leads + clients + employees only?
+7. **Master Dashboard widgets:** Confirm final widget list for Superadmin homepage
+8. **Production hosting:** AWS EC2 / DigitalOcean Droplet / VPS? (Recommend: DigitalOcean for cost-effectiveness)
+9. **Domain:** Confirm `ams.ankdigitalmedia.com` for production
+10. **Launch strategy:** Big-bang (all depts together) OR phased (HR + Sales first, then rest)?
+11. **Training format:** In-person sessions + recorded videos OR live webinar?
+12. **Post-launch support:** 30 days / 60 days / 90 days of dedicated dev availability?
 
 ---
 
@@ -671,61 +685,53 @@ Before Week 15 starts, confirm:
 
 ---
 
-## First Task When You Start Phase 5
+## First Task When You Start Phase 6
 
-When Ankur runs you with "Let's begin Phase 5 Week 15", do this:
+When Ankur runs you with "Let's begin Phase 6 Week 21", do this:
 
-1. **Confirm Phase 1, 2, 3 & 4 are fully working:**
+1. **Confirm Phase 1-5 are all fully working:**
    - Login + RBAC + Audit (Phase 1)
    - CRM + Leads + Pipeline + Clients (Phase 2)
    - DM + GD modules (Phase 3)
    - Development module (Phase 4)
-   - Quick smoke test via Postman
+   - HR Full (Phase 5)
+   - Quick smoke test across all modules
 
-2. **Confirm Phase 5 key decisions** (12 questions in "Phase 5 Key Decisions" section above) — Ankur se 1-by-1 puchho. **This is critical** because HR has compliance + sensitive data implications.
+2. **Confirm Phase 6 key decisions** (12 questions in "Phase 6 Key Decisions" section above)
 
-3. **Reference source data:**
-   - Open `Ams_Final.xlsx` HR sheet for candidate fields + skill matrices
-   - Ask Ankur for: current leave types & quotas, salary structure template, PF/ESI policy
+3. **Create SOPs module structure:**
+   - `backend/src/modules/sops/`
+   - `frontend/src/modules/sops/`
 
-4. **Create HR module structure:**
-   - `backend/src/modules/hr/` (with sub-folders: candidate, employee, attendance, leave, payroll, performance, exit)
-   - `frontend/src/modules/hr/` (similar structure)
-
-5. **Week 15 Build Order (Candidate ATS):**
-   - `Candidate` model with all fields from Excel
-   - Skill matrix seed data (5 profile types — see CLAUDE.md)
-   - `CandidateFollowup` model
-   - `CandidateInterview` model
-   - Candidate CRUD APIs with duplicate detection (phone+email)
-   - Bulk import (Excel/CSV)
+4. **Week 21 Build Order (SOPs Core):**
+   - `SOPCategory` model + seed 6 categories (Sales/DM/GD/Dev/HR + Common)
+   - `SOP` model with full schema
+   - `SOPVersion` model (version history)
+   - `SOPApproval` model (workflow)
+   - SOP CRUD APIs + approval workflow
+   - Permissions: `sops:*`
    - Validation schemas (Zod)
-   - Frontend: Candidate List with job-portal-style filters
-   - Frontend: Candidate Detail with tabs
-   - Frontend: Multi-step Add Candidate form
-   - Frontend: Bulk Import UI
-   - Frontend: Rejected Pool view
-   - Frontend: Interview Scheduler
+   - Frontend: SOP Library page
+   - Frontend: SOP Detail page with version history
+   - Frontend: SOP Editor (Markdown editor)
+   - Frontend: Approval Inbox
 
-6. **Test as you build:**
-   - Create test HR user with `hr:candidate:*` permissions
-   - Add 10 dummy candidates across 5 profiles
-   - Test duplicate detection (same phone)
-   - Schedule interview, complete with feedback
-   - Move candidate through statuses
-   - Verify RBAC: non-HR users can't access
+5. **Test as you build:**
+   - Create test SOPs across categories
+   - Submit for approval → reviewer approves → publish
+   - Version 2 → submit → approve → publish (version history works)
+   - Search SOPs by keyword
 
-7. **Report back to Ankur** after Week 15 with:
-   - Screenshots of candidate list with filters
-   - Demo of skill matrix per profile
-   - Duplicate detection working
-   - Interview workflow
+6. **Report back to Ankur** after Week 21 with:
+   - Screenshots of SOP library + editor
+   - Version control demo
+   - Approval workflow demo
 
-After Week 15 success → move to Week 16 (Employee + Documents).
+After Week 21 → Week 22 (Acknowledgements + Onboarding Checklists) → Week 23 (Polish + Search + Master Dashboard) → Week 24 (Security + Deploy + Training + Launch).
 
-**⚠️ Security reminder for Phase 5:** PAN, Aadhaar, bank details, salary — encrypt at rest. Strict RBAC. Audit every access. This is the most sensitive module in AMS.
+**Phase 6 is the FINAL phase. After this, AMS is complete and production-ready.**
 
-**Commit format:** `[hr] feat: candidate ATS with skill matrices`
+**Commit format:** `[sops] feat: SOP library with version control and approval workflow`
 
 ---
 

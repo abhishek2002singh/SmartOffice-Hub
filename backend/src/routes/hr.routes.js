@@ -94,6 +94,58 @@ router.post ('/leave-requests',             requirePermission('hr:leave:create')
 router.patch('/leave-requests/:id/review',  requirePermission('hr:leave:update'), attCtrl.reviewLeave);
 router.patch('/leave-requests/:id/cancel',  requirePermission('hr:leave:create'), attCtrl.cancelLeave);
 
+// ── WEEK 19 — Performance ────────────────────────────────────────────────────
+const perfCtrl = require('../controllers/performance.controller');
+
+// KRAs
+router.get   ('/kras',       requirePermission('hr:performance:read'),   perfCtrl.listKRAs);
+router.post  ('/kras',       requirePermission('hr:performance:update'), perfCtrl.createKRA);
+router.patch ('/kras/:id',   requirePermission('hr:performance:update'), perfCtrl.updateKRA);
+router.delete('/kras/:id',   requirePermission('hr:performance:update'), perfCtrl.deleteKRA);
+
+// Performance Cycles
+router.get   ('/performance-cycles',      requirePermission('hr:performance:read'),   perfCtrl.listCycles);
+router.post  ('/performance-cycles',      requirePermission('hr:performance:update'), perfCtrl.createCycle);
+router.get   ('/performance-cycles/:id',  requirePermission('hr:performance:read'),   perfCtrl.getCycle);
+router.patch ('/performance-cycles/:id',  requirePermission('hr:performance:update'), perfCtrl.updateCycle);
+
+// Goals (per employee)
+router.get   ('/employees/:id/goals',              requirePermission('hr:performance:read'),   perfCtrl.listGoals);
+router.post  ('/employees/:id/goals',              requirePermission('hr:performance:update'), perfCtrl.setGoals);
+router.patch ('/employees/:id/goals/:goalId',      requirePermission('hr:performance:update'), perfCtrl.updateGoal);
+router.delete('/employees/:id/goals/:goalId',      requirePermission('hr:performance:update'), perfCtrl.deleteGoal);
+
+// Self Evaluation (own employee)
+router.get  ('/me/evaluations/:cycleId',  requirePermission('hr:self:read'),              perfCtrl.getMySelfEvaluation);
+router.post ('/me/evaluations/:cycleId',  requirePermission('hr:self:evaluation:create'), perfCtrl.saveSelfEvaluation);
+
+// Manager Evaluation
+router.post('/employees/:employeeId/manager-evaluation/:cycleId', requirePermission('hr:performance:update'), perfCtrl.saveManagerEvaluation);
+router.get ('/employees/:employeeId/manager-evaluation/:cycleId', requirePermission('hr:performance:read'),   perfCtrl.getManagerEvaluation);
+
+// Combined performance view (self + manager + peers)
+router.get('/employees/:employeeId/performance/:cycleId', requirePermission('hr:performance:read'), perfCtrl.getPerformanceView);
+
+// Peer Feedback
+router.post('/peer-feedback',                       requirePermission('hr:peer:create'),       perfCtrl.submitPeerFeedback);
+router.get ('/employees/:employeeId/peer-feedback', requirePermission('hr:performance:read'),  perfCtrl.listPeerFeedback);
+
+// 1-on-1 Meetings
+router.get  ('/one-on-ones',      requirePermission('hr:performance:read'),   perfCtrl.listOneOnOnes);
+router.post ('/one-on-ones',      requirePermission('hr:performance:update'), perfCtrl.createOneOnOne);
+router.patch('/one-on-ones/:id',  requirePermission('hr:performance:update'), perfCtrl.updateOneOnOne);
+
+// PIP
+router.post  ('/pips',              requirePermission('hr:performance:update'), perfCtrl.createPIP);
+router.get   ('/pips',              requirePermission('hr:performance:read'),   perfCtrl.listPIPs);
+router.get   ('/pips/:id',          requirePermission('hr:performance:read'),   perfCtrl.getPIP);
+router.post  ('/pips/:id/reviews',  requirePermission('hr:performance:update'), perfCtrl.addPIPReview);
+router.patch ('/pips/:id/close',    requirePermission('hr:performance:update'), perfCtrl.closePIP);
+
+// Performance Reports
+router.get('/reports/performance',    requirePermission('hr:performance:read'), perfCtrl.getPerformanceReport);
+router.get('/me/performance-history', requirePermission('hr:self:read'),         perfCtrl.getMyPerformanceHistory);
+
 // ── WEEK 18 — Payroll ─────────────────────────────────────────────────────────
 const payCtrl = require('../controllers/payroll.controller');
 
@@ -133,5 +185,32 @@ router.delete('/bonuses/:id',  requirePermission('hr:bonus:update'), payCtrl.del
 
 // Form 16 placeholder
 router.get('/employees/:id/form16', requirePermission('hr:salary:read'), payCtrl.getForm16);
+
+// ── Exit Management (Week 20) ─────────────────────────────────────────────────
+const exitCtrl = require('../controllers/exit.controller');
+
+// Resignation (employee submits for themselves)
+router.post('/me/resignation', requirePermission('hr:self:update'), exitCtrl.submitResignation);
+
+// Exit Checklist
+router.get  ('/employees/:id/exit-checklist',        requirePermission('hr:employee:read'),   exitCtrl.getExitChecklist);
+router.patch('/employees/:id/exit-checklist',        requirePermission('hr:employee:update'), exitCtrl.updateExitChecklist);
+
+// Exit Interview
+router.post('/employees/:id/exit-interview',         requirePermission('hr:employee:update'), exitCtrl.saveExitInterview);
+router.get ('/employees/:id/exit-interview',         requirePermission('hr:employee:read'),   exitCtrl.getExitInterview);
+
+// Full & Final Settlement
+router.post  ('/employees/:id/full-and-final',         requirePermission('hr:payroll:process'),  exitCtrl.calculateFnF);
+router.get   ('/employees/:id/full-and-final',         requirePermission('hr:salary:read'),      exitCtrl.getFnF);
+router.patch ('/employees/:id/full-and-final/approve', requirePermission('hr:payroll:process'),  exitCtrl.approveFnF);
+router.patch ('/employees/:id/full-and-final/disburse',requirePermission('hr:payroll:disburse'), exitCtrl.disburseFnF);
+
+// Exit Documents (PDFs)
+router.get('/employees/:id/relieving-letter',    requirePermission('hr:employee:read'), exitCtrl.generateRelievingLetter);
+router.get('/employees/:id/experience-letter',   requirePermission('hr:employee:read'), exitCtrl.generateExperienceLetter);
+
+// HR Master Dashboard
+router.get('/hr-dashboard', requirePermission('hr:employee:read'), exitCtrl.getHRDashboard);
 
 module.exports = router;

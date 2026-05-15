@@ -18,7 +18,7 @@ const TYPE_ICON = {
   SYSTEM: <Info size={14} style={{ color: '#00C6FF' }} />,
 }
 
-export default function Topbar({ title }) {
+export default function Topbar({ title, onSearchOpen }) {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useSelector((s) => s.auth)

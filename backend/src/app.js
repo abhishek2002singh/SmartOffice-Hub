@@ -26,6 +26,10 @@ const dmAuditRoutes  = require('./routes/dmAudit.routes');
 const gdRoutes       = require('./routes/gd.routes');
 const devRoutes      = require('./routes/dev.routes');
 const hrRoutes       = require('./routes/hr.routes');
+const sopRoutes          = require('./routes/sop.routes');
+const onboardingRoutes   = require('./routes/onboarding.routes');
+const searchRoutes       = require('./routes/search.routes');
+const dashboardRoutes    = require('./routes/dashboard.routes');
 
 const app    = express();
 const server = http.createServer(app);
@@ -74,6 +78,10 @@ app.use('/api/v1/dm',            dmAuditRoutes);
 app.use('/api/v1/gd',            gdRoutes);
 app.use('/api/v1/dev',           devRoutes);
 app.use('/api/v1/hr',            hrRoutes);
+app.use('/api/v1/sops',          sopRoutes);
+app.use('/api/v1/onboarding',    onboardingRoutes);
+app.use('/api/v1/search',        searchRoutes);
+app.use('/api/v1/dashboard',     dashboardRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

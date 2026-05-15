@@ -120,4 +120,69 @@ export const hrApi = {
   listBonuses:  (params)     => api.get('/hr/bonuses', { params }),
   updateBonus:  (id, data)   => api.patch(`/hr/bonuses/${id}`, data),
   deleteBonus:  (id)         => api.delete(`/hr/bonuses/${id}`),
+
+  // KRAs (Week 19)
+  listKRAs:    (params)     => api.get('/hr/kras', { params }),
+  createKRA:   (data)       => api.post('/hr/kras', data),
+  updateKRA:   (id, data)   => api.patch(`/hr/kras/${id}`, data),
+  deleteKRA:   (id)         => api.delete(`/hr/kras/${id}`),
+
+  // Performance Cycles
+  listCycles:   (params)     => api.get('/hr/performance-cycles', { params }),
+  createCycle:  (data)       => api.post('/hr/performance-cycles', data),
+  getCycle:     (id)         => api.get(`/hr/performance-cycles/${id}`),
+  updateCycle:  (id, data)   => api.patch(`/hr/performance-cycles/${id}`, data),
+
+  // Goals
+  listGoals:   (empId, params) => api.get(`/hr/employees/${empId}/goals`, { params }),
+  setGoals:    (empId, data)   => api.post(`/hr/employees/${empId}/goals`, data),
+  updateGoal:  (empId, goalId, data) => api.patch(`/hr/employees/${empId}/goals/${goalId}`, data),
+  deleteGoal:  (empId, goalId)       => api.delete(`/hr/employees/${empId}/goals/${goalId}`),
+
+  // Self Evaluation
+  getMySelfEval:  (cycleId)       => api.get(`/hr/me/evaluations/${cycleId}`),
+  saveSelfEval:   (cycleId, data) => api.post(`/hr/me/evaluations/${cycleId}`, data),
+
+  // Manager Evaluation
+  saveManagerEval: (empId, cycleId, data) => api.post(`/hr/employees/${empId}/manager-evaluation/${cycleId}`, data),
+  getManagerEval:  (empId, cycleId)       => api.get(`/hr/employees/${empId}/manager-evaluation/${cycleId}`),
+
+  // Combined Performance View
+  getPerformanceView: (empId, cycleId) => api.get(`/hr/employees/${empId}/performance/${cycleId}`),
+
+  // Peer Feedback
+  submitPeerFeedback: (data)   => api.post('/hr/peer-feedback', data),
+  listPeerFeedback:   (empId, params) => api.get(`/hr/employees/${empId}/peer-feedback`, { params }),
+
+  // 1-on-1 Meetings
+  listOneOnOnes:   (params)     => api.get('/hr/one-on-ones', { params }),
+  createOneOnOne:  (data)       => api.post('/hr/one-on-ones', data),
+  updateOneOnOne:  (id, data)   => api.patch(`/hr/one-on-ones/${id}`, data),
+
+  // PIP
+  createPIP:    (data)         => api.post('/hr/pips', data),
+  listPIPs:     (params)       => api.get('/hr/pips', { params }),
+  getPIP:       (id)           => api.get(`/hr/pips/${id}`),
+  addPIPReview: (id, data)     => api.post(`/hr/pips/${id}/reviews`, data),
+  closePIP:     (id, data)     => api.patch(`/hr/pips/${id}/close`, data),
+
+  // Reports
+  getPerformanceReport:  (params) => api.get('/hr/reports/performance', { params }),
+  getMyPerfHistory:      ()       => api.get('/hr/me/performance-history'),
+
+  // Exit Management (Week 20)
+  submitResignation:     (data)        => api.post('/hr/me/resignation', data),
+  getExitChecklist:      (empId)       => api.get(`/hr/employees/${empId}/exit-checklist`),
+  updateExitChecklist:   (empId, data) => api.patch(`/hr/employees/${empId}/exit-checklist`, data),
+  saveExitInterview:     (empId, data) => api.post(`/hr/employees/${empId}/exit-interview`, data),
+  getExitInterview:      (empId)       => api.get(`/hr/employees/${empId}/exit-interview`),
+  calculateFnF:          (empId, data) => api.post(`/hr/employees/${empId}/full-and-final`, data),
+  getFnF:                (empId)       => api.get(`/hr/employees/${empId}/full-and-final`),
+  approveFnF:            (empId)       => api.patch(`/hr/employees/${empId}/full-and-final/approve`),
+  disburseFnF:           (empId)       => api.patch(`/hr/employees/${empId}/full-and-final/disburse`),
+  getRelievingLetter:    (empId)       => api.get(`/hr/employees/${empId}/relieving-letter`, { responseType: 'blob' }),
+  getExperienceLetter:   (empId)       => api.get(`/hr/employees/${empId}/experience-letter`, { responseType: 'blob' }),
+
+  // HR Master Dashboard
+  getHRDashboard: () => api.get('/hr/hr-dashboard'),
 };

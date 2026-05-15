@@ -46,6 +46,28 @@ require('./Holiday');
 require('./LeaveType');
 require('./LeaveBalance');
 require('./LeaveRequest');
+// Phase 5 Week 19 — Performance
+require('./KRA');
+require('./PerformanceCycle');
+require('./Goal');
+require('./SelfEvaluation');
+require('./ManagerEvaluation');
+require('./PeerFeedback');
+require('./OneOnOne');
+require('./PIP');
+// Phase 5 Week 20 — Exit Management
+require('./ExitChecklist');
+require('./ExitInterview');
+require('./FullAndFinalSettlement');
+// Phase 6 — SOPs
+require('./SOPCategory');
+require('./SOP');
+require('./SOPVersion');
+require('./SOPApproval');
+require('./SOPAcknowledgement');
+// Phase 6 Week 22 — Onboarding
+require('./OnboardingChecklist');
+require('./EmployeeOnboardingProgress');
 // Phase 5 Week 18 — Payroll
 require('./SalaryStructure');
 require('./EmployeeSalary');

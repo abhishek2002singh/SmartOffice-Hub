@@ -114,6 +114,13 @@ const PERMISSIONS = [
   { key: 'hr:self:evaluation:read',   label: 'View Own Evaluations',      module: 'hr' },
   { key: 'hr:self:evaluation:create', label: 'Submit Self Evaluation',    module: 'hr' },
   { key: 'hr:peer:create',            label: 'Submit Peer Feedback',      module: 'hr' },
+  // SOPs (Phase 6)
+  { key: 'sops:read',             label: 'View SOPs',                 module: 'sops' },
+  { key: 'sops:create',           label: 'Create/Edit SOPs',          module: 'sops' },
+  { key: 'sops:delete',           label: 'Delete SOPs',               module: 'sops' },
+  { key: 'sops:approve',          label: 'Approve SOPs',              module: 'sops' },
+  { key: 'sops:publish',          label: 'Publish SOPs',              module: 'sops' },
+  { key: 'sops:category:manage',  label: 'Manage SOP Categories',     module: 'sops' },
 ];
 
 module.exports = PERMISSIONS;

@@ -51,6 +51,32 @@ import PayrollRunPage         from './modules/hr/pages/PayrollRunPage'
 import MyPayslipsPage         from './modules/hr/pages/MyPayslipsPage'
 import ReimbursementsPage     from './modules/hr/pages/ReimbursementsPage'
 import BonusManagementPage    from './modules/hr/pages/BonusManagementPage'
+import PerformanceCycleSetupPage from './modules/hr/pages/PerformanceCycleSetupPage'
+import KRAMasterPage           from './modules/hr/pages/KRAMasterPage'
+import GoalSettingPage         from './modules/hr/pages/GoalSettingPage'
+import SelfEvaluationPage      from './modules/hr/pages/SelfEvaluationPage'
+import ManagerEvaluationPage   from './modules/hr/pages/ManagerEvaluationPage'
+import PeerFeedbackPage        from './modules/hr/pages/PeerFeedbackPage'
+import OneOnOnePage            from './modules/hr/pages/OneOnOnePage'
+import PIPPage                 from './modules/hr/pages/PIPPage'
+import PerformanceDashboardPage from './modules/hr/pages/PerformanceDashboardPage'
+import ResignationPage         from './modules/hr/pages/ResignationPage'
+import ExitWorkflowPage        from './modules/hr/pages/ExitWorkflowPage'
+import ExitInterviewPage       from './modules/hr/pages/ExitInterviewPage'
+import FullAndFinalPage        from './modules/hr/pages/FullAndFinalPage'
+import HRMasterDashboardPage   from './modules/hr/pages/HRMasterDashboardPage'
+
+import SOPLibraryPage      from './modules/sops/pages/SOPLibraryPage'
+import SOPDetailPage       from './modules/sops/pages/SOPDetailPage'
+import SOPEditorPage       from './modules/sops/pages/SOPEditorPage'
+import SOPCategoriesPage   from './modules/sops/pages/SOPCategoriesPage'
+import SOPApprovalInboxPage from './modules/sops/pages/SOPApprovalInboxPage'
+import MySOPsPage          from './modules/sops/pages/MySOPsPage'
+import SOPAcknowledgementMatrixPage from './modules/sops/pages/SOPAcknowledgementMatrixPage'
+
+import MyOnboardingPage         from './modules/hr/pages/MyOnboardingPage'
+import OnboardingTemplatesPage  from './modules/hr/pages/OnboardingTemplatesPage'
+import OnboardingProgressPage   from './modules/hr/pages/OnboardingProgressPage'
 
 import DevProjectListPage        from './modules/dev/pages/DevProjectListPage'
 import DevProjectDetailPage      from './modules/dev/pages/DevProjectDetailPage'
@@ -139,6 +165,39 @@ function AppRoutes() {
           <Route path="hr/me/payslips"        element={<MyPayslipsPage />} />
           <Route path="hr/reimbursements"     element={<ReimbursementsPage />} />
           <Route path="hr/bonuses"            element={<ProtectedRoute minRole="ADMIN"><BonusManagementPage /></ProtectedRoute>} />
+
+          {/* Performance (Week 19) */}
+          <Route path="hr/performance-cycles" element={<ProtectedRoute minRole="ADMIN"><PerformanceCycleSetupPage /></ProtectedRoute>} />
+          <Route path="hr/kras"               element={<ProtectedRoute minRole="DEPT_HEAD"><KRAMasterPage /></ProtectedRoute>} />
+          <Route path="hr/employees/:id/goals" element={<GoalSettingPage />} />
+          <Route path="hr/me/evaluation"      element={<SelfEvaluationPage />} />
+          <Route path="hr/employees/:id/manager-evaluation" element={<ProtectedRoute minRole="DEPT_HEAD"><ManagerEvaluationPage /></ProtectedRoute>} />
+          <Route path="hr/peer-feedback"      element={<PeerFeedbackPage />} />
+          <Route path="hr/one-on-ones"        element={<OneOnOnePage />} />
+          <Route path="hr/pips"               element={<ProtectedRoute minRole="DEPT_HEAD"><PIPPage /></ProtectedRoute>} />
+          <Route path="hr/performance"        element={<PerformanceDashboardPage />} />
+
+          {/* Exit Management (Week 20) */}
+          <Route path="hr/me/resignation"                          element={<ResignationPage />} />
+          <Route path="hr/employees/:id/exit-workflow"             element={<ProtectedRoute minRole="DEPT_HEAD"><ExitWorkflowPage /></ProtectedRoute>} />
+          <Route path="hr/employees/:id/exit-interview"            element={<ProtectedRoute minRole="DEPT_HEAD"><ExitInterviewPage /></ProtectedRoute>} />
+          <Route path="hr/employees/:id/full-and-final"            element={<ProtectedRoute minRole="ADMIN"><FullAndFinalPage /></ProtectedRoute>} />
+          <Route path="hr/dashboard"                               element={<ProtectedRoute minRole="ADMIN"><HRMasterDashboardPage /></ProtectedRoute>} />
+
+          {/* SOPs */}
+          <Route path="sops"                   element={<SOPLibraryPage />} />
+          <Route path="sops/me"                element={<MySOPsPage />} />
+          <Route path="sops/new"               element={<SOPEditorPage />} />
+          <Route path="sops/categories"        element={<SOPCategoriesPage />} />
+          <Route path="sops/approvals"         element={<SOPApprovalInboxPage />} />
+          <Route path="sops/ack-matrix"        element={<ProtectedRoute minRole="DEPT_HEAD"><SOPAcknowledgementMatrixPage /></ProtectedRoute>} />
+          <Route path="sops/:id"               element={<SOPDetailPage />} />
+          <Route path="sops/:id/edit"          element={<SOPEditorPage />} />
+
+          {/* Onboarding */}
+          <Route path="hr/me/onboarding"            element={<MyOnboardingPage />} />
+          <Route path="hr/onboarding-templates"     element={<ProtectedRoute minRole="ADMIN"><OnboardingTemplatesPage /></ProtectedRoute>} />
+          <Route path="hr/onboarding-progress"      element={<ProtectedRoute minRole="DEPT_HEAD"><OnboardingProgressPage /></ProtectedRoute>} />
 
           {/* Dev */}
           <Route path="dev/dashboard"    element={<DevDeveloperDashboardPage />} />
