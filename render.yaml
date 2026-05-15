@@ -1,0 +1,47 @@
+services:
+  # ── Backend (Node.js Web Service) ─────────────────────────────────────────
+  - type: web
+    name: ams-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_EXPIRY
+        value: 24h
+      - key: JWT_REFRESH_EXPIRY
+        value: 7d
+      - key: CLIENT_URL
+        sync: false
+
+  # ── Frontend (Static Site) ─────────────────────────────────────────────────
+  - type: web
+    name: ams-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
