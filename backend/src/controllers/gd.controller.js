@@ -9,10 +9,17 @@ const Client         = require('../models/Client');
 const { logAudit }   = require('../middleware/auditLogger');
 const { getTaskFolder, uploadFile, deleteFile } = require('../services/googleDrive.service');
 
-// multer â€” memory storage (we pipe buffer to Drive)
+const BLOCKED_EXTENSIONS = /\.(exe|bat|cmd|sh|ps1|vbs|js|jar|msi|com|scr|pif|reg|dll|so|dylib)$/i;
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
+  limits: { fileSize: 100 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (BLOCKED_EXTENSIONS.test(file.originalname)) {
+      return cb(new Error('File type not allowed'));
+    }
+    cb(null, true);
+  },
 });
 exports.uploadMiddleware = upload.single('file');
 

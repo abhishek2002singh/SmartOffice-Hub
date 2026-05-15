@@ -42,6 +42,10 @@
     "testEnvironment": "node",
     "testMatch": [
       "**/tests/**/*.test.js"
-    ]
+    ],
+    "globalSetup": "./tests/globalSetup.js",
+    "globalTeardown": "./tests/globalTeardown.js",
+    "setupFiles": ["./tests/jestSetup.js"],
+    "testTimeout": 30000
   }
 }

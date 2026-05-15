@@ -8,7 +8,15 @@ const attCtrl = require('../controllers/attendance.controller');
 
 router.use(auth);
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const BLOCKED_EXT = /\.(exe|bat|cmd|sh|ps1|vbs|js|jar|msi|com|scr|pif|reg|dll)$/i;
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (BLOCKED_EXT.test(file.originalname)) return cb(new Error('File type not allowed'));
+    cb(null, true);
+  },
+});
 
 // ── HR Config ─────────────────────────────────────────────────────────────────
 router.get  ('/config',        requirePermission('hr:config:read'),   ctrl.getHRConfig);

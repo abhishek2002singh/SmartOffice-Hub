@@ -23,7 +23,7 @@ const progressItemSchema = new Schema({
 }, { _id: true });
 
 const employeeOnboardingProgressSchema = new Schema({
-  employeeId:   { type: Schema.Types.ObjectId, ref: 'Employee', required: true, index: true },
+  employeeId:   { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
   checklistId:  { type: Schema.Types.ObjectId, ref: 'OnboardingChecklist', required: true },
   checklistName:{ type: String, default: '' },
   startDate:    { type: Date, required: true },
