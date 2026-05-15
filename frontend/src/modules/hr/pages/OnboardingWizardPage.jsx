@@ -38,14 +38,16 @@ const inp = "px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text
 export default function OnboardingWizardPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const candidateId = searchParams.get('candidateId')
+  const urlCandidateId = searchParams.get('candidateId')
 
-  const [step, setStep]         = useState(0)
-  const [candidate, setCandidate] = useState(null)
-  const [depts, setDepts]       = useState([])
-  const [employees, setEmployees] = useState([])
-  const [saving, setSaving]     = useState(false)
-  const [error, setError]       = useState('')
+  const [step, setStep]               = useState(0)
+  const [candidate, setCandidate]     = useState(null)
+  const [candidateId, setCandidateId] = useState(urlCandidateId || '')
+  const [candidates, setCandidates]   = useState([])
+  const [depts, setDepts]             = useState([])
+  const [employees, setEmployees]     = useState([])
+  const [saving, setSaving]           = useState(false)
+  const [error, setError]             = useState('')
 
   const [form, setForm] = useState({
     // Basic (from candidate — pre-filled)
@@ -62,31 +64,44 @@ export default function OnboardingWizardPage() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  // Load candidates list if no candidateId from URL
   useEffect(() => {
-    if (candidateId) {
-      hrApi.getCandidate(candidateId).then(r => {
-        const c = r.data.data.candidate
-        setCandidate(c)
-        setForm(f => ({
-          ...f,
-          firstName: c.firstName || '',
-          middleName: c.middleName || '',
-          lastName: c.lastName || '',
-          dob: c.dob ? c.dob.slice(0, 10) : '',
-          gender: c.gender || 'Male',
-          maritalStatus: c.maritalStatus || 'Unmarried',
-          personalEmail: c.email || '',
-          phone: c.phone || '',
-          currentAddress: c.address || '',
-        }))
-      }).catch(() => {})
+    if (!urlCandidateId) {
+      hrApi.listCandidates({ limit: 200, status: 'Selected' })
+        .then(r => setCandidates(r.data?.data?.candidates || []))
+        .catch(() => {})
     }
+  }, [urlCandidateId])
+
+  // Load depts + managers
+  useEffect(() => {
     Promise.all([
       api.get('/departments'),
       hrApi.listEmployees({ limit: 100 }),
     ]).then(([d, e]) => {
       setDepts(d.data?.data?.departments || [])
       setEmployees(e.data?.data?.employees || [])
+    }).catch(() => {})
+  }, [])
+
+  // Pre-fill form when candidateId is set
+  useEffect(() => {
+    if (!candidateId) return
+    hrApi.getCandidate(candidateId).then(r => {
+      const c = r.data.data.candidate
+      setCandidate(c)
+      setForm(f => ({
+        ...f,
+        firstName: c.firstName || '',
+        middleName: c.middleName || '',
+        lastName: c.lastName || '',
+        dob: c.dob ? c.dob.slice(0, 10) : '',
+        gender: c.gender || 'Male',
+        maritalStatus: c.maritalStatus || 'Unmarried',
+        personalEmail: c.email || '',
+        phone: c.phone || '',
+        currentAddress: c.address || '',
+      }))
     }).catch(() => {})
   }, [candidateId])
 
@@ -137,7 +152,7 @@ export default function OnboardingWizardPage() {
         },
       }
       if (!candidateId) {
-        setError('No candidate selected. Go to Candidates list and click "Onboard" on a candidate.')
+        setError('Please select a candidate from the dropdown above before onboarding.')
         setSaving(false)
         return
       }
@@ -160,6 +175,28 @@ export default function OnboardingWizardPage() {
           {candidate && <span className="text-sm text-gray-400">from candidate: {candidate.firstName} {candidate.lastName}</span>}
         </div>
       </div>
+
+      {/* Candidate picker — shown only when no candidate preselected from URL */}
+      {!urlCandidateId && (
+        <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: '#0A1628', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <label className="text-xs text-gray-400 uppercase tracking-wider">Select Candidate to Onboard <span className="text-red-400">*</span></label>
+          <select
+            value={candidateId}
+            onChange={e => { setCandidateId(e.target.value); setCandidate(null) }}
+            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white outline-none focus:border-blue-500"
+          >
+            <option value="">— Choose a candidate —</option>
+            {candidates.map(c => (
+              <option key={c._id} value={c._id}>
+                {c.firstName} {c.lastName} · {c.appliedProfile} · {c.phone}
+              </option>
+            ))}
+          </select>
+          {candidates.length === 0 && (
+            <p className="text-xs text-gray-500">No candidates with status "Selected" found. Go to <button onClick={() => navigate('/hr/candidates')} className="text-blue-400 underline">Candidates</button> and mark one as Selected first.</p>
+          )}
+        </div>
+      )}
 
       <StepIndicator current={step} />
 
