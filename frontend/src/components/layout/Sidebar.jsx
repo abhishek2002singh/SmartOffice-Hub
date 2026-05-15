@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { LayoutDashboard, Users, Building2, Shield, Settings, ScrollText, UserCircle, ChevronRight, Target, Handshake, PieChart, BarChart2, MonitorCheck, Megaphone, SlidersHorizontal, FileText, Palette, Inbox, ImageIcon, Layers, Code2, FolderKanban, MailOpen, UserSearch, XCircle, Upload, UserCheck, UsersRound, CalendarDays, Palmtree, CheckSquare, Activity, CalendarRange, DollarSign, Banknote, Receipt, Gift, Flag, ClipboardList, Users2, AlertTriangle, TrendingUp, LogOut, Building, BookOpen, ClipboardCheck } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Shield, Settings, ScrollText, UserCircle, ChevronRight, Target, Handshake, PieChart, BarChart2, MonitorCheck, Megaphone, SlidersHorizontal, FileText, Palette, Inbox, ImageIcon, Layers, Code2, FolderKanban, MailOpen, UserSearch, XCircle, Upload, UserCheck, UsersRound, CalendarDays, Palmtree, CheckSquare, Activity, CalendarRange, DollarSign, Banknote, Receipt, Gift, Flag, ClipboardList, Users2, AlertTriangle, TrendingUp, LogOut, Building, BookOpen, ClipboardCheck, Gauge } from 'lucide-react'
 
 const ROLE_ORDER = ['TEAM_MEMBER', 'DEPT_HEAD', 'SUBADMIN', 'ADMIN', 'SUPERADMIN']
 
@@ -12,9 +12,10 @@ const NAV_SECTIONS = [
       { to: '/users',       label: 'Users',       icon: Users,           minRole: 'ADMIN' },
       { to: '/departments', label: 'Departments', icon: Building2,       minRole: 'ADMIN' },
       { to: '/permissions', label: 'Permissions', icon: Shield,          minRole: 'SUPERADMIN' },
-      { to: '/audit-logs',  label: 'Audit Logs',  icon: ScrollText,      minRole: 'SUPERADMIN' },
-      { to: '/settings',    label: 'Settings',    icon: Settings,        minRole: 'ADMIN' },
-      { to: '/profile',     label: 'My Profile',  icon: UserCircle,      minRole: 'TEAM_MEMBER' },
+      { to: '/audit-logs',       label: 'Audit Logs',      icon: ScrollText,      minRole: 'SUPERADMIN' },
+      { to: '/settings',         label: 'Settings',        icon: Settings,        minRole: 'ADMIN' },
+      { to: '/profile',          label: 'My Profile',      icon: UserCircle,      minRole: 'TEAM_MEMBER' },
+      { to: '/master-dashboard', label: 'Master Dashboard',icon: Gauge,           minRole: 'ADMIN' },
     ],
   },
   {

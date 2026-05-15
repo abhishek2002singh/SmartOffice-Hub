@@ -6,6 +6,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const jwt = require('jsonwebtoken');
+const logger = require('./utils/logger');
+const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
 
 require('./models/index');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
@@ -53,14 +55,50 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {});
 });
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc:  ["'self'", "'unsafe-inline'"],
+      imgSrc:    ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'wss:', 'ws:'],
+    },
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
-app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', {
+  stream: { write: (msg) => logger.info(msg.trimEnd()) },
+  skip: () => process.env.NODE_ENV === 'test',
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use((req, _res, next) => { req.io = io; next(); });
 
-app.get('/api/v1/health', (_req, res) => res.json({ success: true, message: 'AMS API is running' }));
+app.use('/api/v1/auth', authLimiter);
+app.use('/api/', apiLimiter);
+
+app.get('/api/v1/health', (_req, res) => {
+  const mongoose = require('mongoose');
+  const dbState  = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  const mem      = process.memoryUsage();
+  res.json({
+    success: true,
+    data: {
+      status:    'ok',
+      timestamp: new Date().toISOString(),
+      uptime:    Math.floor(process.uptime()),
+      env:       process.env.NODE_ENV,
+      db:        dbState[mongoose.connection.readyState] || 'unknown',
+      memory: {
+        rss:      `${Math.round(mem.rss / 1024 / 1024)} MB`,
+        heapUsed: `${Math.round(mem.heapUsed / 1024 / 1024)} MB`,
+      },
+      version: '1.0.0',
+    },
+  });
+});
 
 app.use('/api/v1/auth',          authRoutes);
 app.use('/api/v1/users',         userRoutes);

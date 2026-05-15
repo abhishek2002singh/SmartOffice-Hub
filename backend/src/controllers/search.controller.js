@@ -10,8 +10,12 @@ const DEPT_HEAD_ROLES = ['SUPERADMIN', 'ADMIN', 'SUBADMIN', 'DEPT_HEAD'];
 
 exports.globalSearch = async (req, res) => {
   try {
-    const { q = '', modules = '' } = req.query;
-    const query = q.trim();
+    const rawQ    = req.query.q;
+    const modules = typeof req.query.modules === 'string' ? req.query.modules : '';
+    if (!rawQ || typeof rawQ !== 'string') {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Search query must be at least 2 characters' } });
+    }
+    const query = rawQ.trim();
     if (query.length < 2) {
       return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Search query must be at least 2 characters' } });
     }

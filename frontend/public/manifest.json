@@ -1,0 +1,20 @@
+{
+  "name": "ANK Management System",
+  "short_name": "AMS",
+  "description": "Internal ERP for ANK Digital Media",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A1628",
+  "theme_color": "#0A1628",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en-IN"
+}
