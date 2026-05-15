@@ -20,6 +20,7 @@ const NAV_SECTIONS = [
   },
   {
     label: 'CRM',
+    module: 'crm',
     items: [
       { to: '/crm/dashboard', label: 'Dashboard', icon: PieChart,    minRole: 'TEAM_MEMBER' },
       { to: '/crm/leads',     label: 'Leads',     icon: Target,      minRole: 'TEAM_MEMBER' },
@@ -29,6 +30,7 @@ const NAV_SECTIONS = [
   },
   {
     label: 'Digital Marketing',
+    module: 'dm',
     items: [
       { to: '/dm/daily',         label: 'Daily Tasks',     icon: MonitorCheck,       minRole: 'TEAM_MEMBER' },
       { to: '/dm/audit-reports', label: 'Audit Reports',   icon: FileText,           minRole: 'TEAM_MEMBER' },
@@ -39,6 +41,7 @@ const NAV_SECTIONS = [
   },
   {
     label: 'Graphic & Video',
+    module: 'gd',
     items: [
       { to: '/gd/dashboard',  label: 'My Dashboard',  icon: Palette,    minRole: 'TEAM_MEMBER' },
       { to: '/gd/tasks',      label: 'Task Inbox',    icon: Inbox,      minRole: 'TEAM_MEMBER' },
@@ -90,6 +93,7 @@ const NAV_SECTIONS = [
   },
   {
     label: 'Development',
+    module: 'dev',
     items: [
       { to: '/dev/dashboard',  label: 'My Dashboard',    icon: LayoutDashboard, minRole: 'TEAM_MEMBER' },
       { to: '/dev/projects',   label: 'Projects',        icon: FolderKanban,    minRole: 'TEAM_MEMBER' },
@@ -102,6 +106,7 @@ const NAV_SECTIONS = [
 export default function Sidebar({ collapsed, onToggle }) {
   const { user } = useSelector((s) => s.auth)
   const userLevel = ROLE_ORDER.indexOf(user?.role || 'TEAM_MEMBER')
+  const isAdminPlus = userLevel >= ROLE_ORDER.indexOf('ADMIN')
 
   return (
     <aside
@@ -124,6 +129,12 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Nav */}
       <nav className="flex-1 py-3 overflow-y-auto">
         {NAV_SECTIONS.map((section) => {
+          // Hide module sections when user lacks any permission for that module
+          if (section.module && !isAdminPlus) {
+            const hasAccess = Array.isArray(user?.permissions) &&
+              user.permissions.some((p) => p.startsWith(section.module + ':'))
+            if (!hasAccess) return null
+          }
           const visible = section.items.filter((item) => userLevel >= ROLE_ORDER.indexOf(item.minRole))
           if (!visible.length) return null
           return (

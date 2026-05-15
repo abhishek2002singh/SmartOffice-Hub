@@ -6,10 +6,10 @@ const { requirePermission } = require('../middleware/rbac.middleware');
 router.use(authenticate);
 
 // Lead sources (needed for create form)
-router.get('/sources', ctrl.listSources);
+router.get('/sources', requirePermission('crm:lead:view'), ctrl.listSources);
 
 // CSV template download
-router.get('/import/template', ctrl.downloadTemplate);
+router.get('/import/template', requirePermission('crm:lead:create'), ctrl.downloadTemplate);
 
 // Stats
 router.get('/stats', requirePermission('crm:lead:view'), ctrl.getStats);

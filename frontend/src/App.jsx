@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { fetchMeThunk } from './store/authSlice'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -144,23 +144,27 @@ function AppRoutes() {
           <Route path="permissions" element={<ProtectedRoute minRole="SUPERADMIN"><L><PermissionsPage /></L></ProtectedRoute>} />
           <Route path="audit-logs"  element={<ProtectedRoute minRole="SUPERADMIN"><L><AuditLogPage /></L></ProtectedRoute>} />
 
-          {/* CRM */}
-          <Route path="crm/dashboard"   element={<L><CRMDashboardPage /></L>} />
-          <Route path="crm/leads"       element={<L><LeadsPage /></L>} />
-          <Route path="crm/leads/:id"   element={<L><LeadDetailPage /></L>} />
-          <Route path="crm/clients"     element={<L><ClientsPage /></L>} />
-          <Route path="crm/clients/:id" element={<L><ClientDetailPage /></L>} />
-          <Route path="crm/reports"     element={<ProtectedRoute minRole="SUBADMIN"><L><CRMReportsPage /></L></ProtectedRoute>} />
+          {/* CRM — requires crm: permission */}
+          <Route element={<ProtectedRoute requiredPermission="crm:"><Outlet /></ProtectedRoute>}>
+            <Route path="crm/dashboard"   element={<L><CRMDashboardPage /></L>} />
+            <Route path="crm/leads"       element={<L><LeadsPage /></L>} />
+            <Route path="crm/leads/:id"   element={<L><LeadDetailPage /></L>} />
+            <Route path="crm/clients"     element={<L><ClientsPage /></L>} />
+            <Route path="crm/clients/:id" element={<L><ClientDetailPage /></L>} />
+            <Route path="crm/reports"     element={<ProtectedRoute minRole="SUBADMIN"><L><CRMReportsPage /></L></ProtectedRoute>} />
+          </Route>
 
-          {/* DM */}
-          <Route path="dm/daily"                          element={<L><DMDailyDashboard /></L>} />
-          <Route path="dm/head"                           element={<ProtectedRoute minRole="DEPT_HEAD"><L><DMHeadDashboard /></L></ProtectedRoute>} />
-          <Route path="dm/config"                         element={<ProtectedRoute minRole="ADMIN"><L><DMConfigPage /></L></ProtectedRoute>} />
-          <Route path="dm/clients/:clientId/setup"        element={<ProtectedRoute minRole="ADMIN"><L><ClientDMSetupPage /></L></ProtectedRoute>} />
-          <Route path="dm/audit-reports"                  element={<L><DMAuditReportsPage /></L>} />
-          <Route path="dm/audit-reports/compare"          element={<L><DMAuditComparePage /></L>} />
-          <Route path="dm/audit-reports/:id/fill"         element={<L><DMAuditFillPage /></L>} />
-          <Route path="dm/gd-queue"                       element={<L><DMGDQueuePage /></L>} />
+          {/* DM — requires dm: permission */}
+          <Route element={<ProtectedRoute requiredPermission="dm:"><Outlet /></ProtectedRoute>}>
+            <Route path="dm/daily"                   element={<L><DMDailyDashboard /></L>} />
+            <Route path="dm/head"                    element={<ProtectedRoute minRole="DEPT_HEAD"><L><DMHeadDashboard /></L></ProtectedRoute>} />
+            <Route path="dm/config"                  element={<ProtectedRoute minRole="ADMIN"><L><DMConfigPage /></L></ProtectedRoute>} />
+            <Route path="dm/clients/:clientId/setup" element={<ProtectedRoute minRole="ADMIN"><L><ClientDMSetupPage /></L></ProtectedRoute>} />
+            <Route path="dm/audit-reports"           element={<L><DMAuditReportsPage /></L>} />
+            <Route path="dm/audit-reports/compare"   element={<L><DMAuditComparePage /></L>} />
+            <Route path="dm/audit-reports/:id/fill"  element={<L><DMAuditFillPage /></L>} />
+            <Route path="dm/gd-queue"                element={<L><DMGDQueuePage /></L>} />
+          </Route>
 
           {/* HR — Candidates */}
           <Route path="hr/candidates"          element={<ProtectedRoute minRole="DEPT_HEAD"><L><CandidateListPage /></L></ProtectedRoute>} />
@@ -224,18 +228,22 @@ function AppRoutes() {
           <Route path="sops/:id"         element={<L><SOPDetailPage /></L>} />
           <Route path="sops/:id/edit"    element={<L><SOPEditorPage /></L>} />
 
-          {/* Dev */}
-          <Route path="dev/dashboard"    element={<L><DevDeveloperDashboardPage /></L>} />
-          <Route path="dev/head"         element={<ProtectedRoute minRole="DEPT_HEAD"><L><DevHeadDashboardPage /></L></ProtectedRoute>} />
-          <Route path="dev/projects"     element={<L><DevProjectListPage /></L>} />
-          <Route path="dev/projects/:id" element={<L><DevProjectDetailPage /></L>} />
-          <Route path="dev/handovers"    element={<ProtectedRoute minRole="DEPT_HEAD"><L><DevHandoverInboxPage /></L></ProtectedRoute>} />
+          {/* Dev — requires dev: permission */}
+          <Route element={<ProtectedRoute requiredPermission="dev:"><Outlet /></ProtectedRoute>}>
+            <Route path="dev/dashboard"    element={<L><DevDeveloperDashboardPage /></L>} />
+            <Route path="dev/head"         element={<ProtectedRoute minRole="DEPT_HEAD"><L><DevHeadDashboardPage /></L></ProtectedRoute>} />
+            <Route path="dev/projects"     element={<L><DevProjectListPage /></L>} />
+            <Route path="dev/projects/:id" element={<L><DevProjectDetailPage /></L>} />
+            <Route path="dev/handovers"    element={<ProtectedRoute minRole="DEPT_HEAD"><L><DevHandoverInboxPage /></L></ProtectedRoute>} />
+          </Route>
 
-          {/* GD */}
-          <Route path="gd/dashboard"  element={<L><GDDesignerDashboard /></L>} />
-          <Route path="gd/tasks"      element={<L><GDTaskInboxPage /></L>} />
-          <Route path="gd/tasks/:id"  element={<L><GDTaskDetailPage /></L>} />
-          <Route path="gd/head"       element={<ProtectedRoute minRole="DEPT_HEAD"><L><GDHeadDashboard /></L></ProtectedRoute>} />
+          {/* GD — requires gd: permission */}
+          <Route element={<ProtectedRoute requiredPermission="gd:"><Outlet /></ProtectedRoute>}>
+            <Route path="gd/dashboard"  element={<L><GDDesignerDashboard /></L>} />
+            <Route path="gd/tasks"      element={<L><GDTaskInboxPage /></L>} />
+            <Route path="gd/tasks/:id"  element={<L><GDTaskDetailPage /></L>} />
+            <Route path="gd/head"       element={<ProtectedRoute minRole="DEPT_HEAD"><L><GDHeadDashboard /></L></ProtectedRoute>} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
