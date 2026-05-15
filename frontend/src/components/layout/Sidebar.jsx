@@ -110,12 +110,8 @@ export default function Sidebar({ collapsed, onToggle }) {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1E6FD9' }}>
-          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-            <polygon points="12,2 22,20 2,20" fill="#fff" opacity="0.9" />
-            <rect x="11" y="9" width="2" height="8" rx="0.5" fill="#1E6FD9" />
-            <polygon points="12,5 15,11 9,11" fill="#1E6FD9" />
-          </svg>
+        <div className="shrink-0 w-8 h-8 rounded-lg overflow-hidden">
+          <img src="/Ank_logo.jpg" alt="ANK Logo" className="w-full h-full object-cover" />
         </div>
         {!collapsed && (
           <div>

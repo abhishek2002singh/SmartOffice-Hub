@@ -37,12 +37,8 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ backgroundColor: '#1A3A6B' }}>
-            <svg viewBox="0 0 40 40" className="w-9 h-9" fill="none">
-              <polygon points="20,4 36,34 4,34" fill="#1E6FD9" />
-              <rect x="18" y="14" width="4" height="14" rx="1" fill="#fff" />
-              <polygon points="20,8 25,18 15,18" fill="#fff" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden">
+            <img src="/Ank_logo.jpg" alt="ANK Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-wide">AMS</h1>
           <p className="text-sm mt-1" style={{ color: '#00C6FF' }}>ANK Digital Media</p>
