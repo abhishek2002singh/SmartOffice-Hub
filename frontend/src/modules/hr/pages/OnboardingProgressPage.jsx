@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { ArrowLeft, ClipboardList, CheckCircle, AlertCircle, Clock, UserPlus, Users } from 'lucide-react'
 import onboardingApi from '../../../api/onboarding.api'
-import hrApi from '../../../api/hr.api'
+import { hrApi } from '../../../api/hr.api'
 
 const STATUS_COLORS = {
   in_progress: 'text-blue-300 bg-blue-900/40',
