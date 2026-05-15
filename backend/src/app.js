@@ -36,6 +36,8 @@ const dashboardRoutes    = require('./routes/dashboard.routes');
 const app    = express();
 const server = http.createServer(app);
 
+app.set('trust proxy', 1);
+
 const io = new Server(server, {
   cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true },
 });
