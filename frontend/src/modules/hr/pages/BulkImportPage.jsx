@@ -39,28 +39,45 @@ export default function BulkImportPage() {
       </div>
 
       {/* Instructions */}
-      <div className="bg-[#0A1628] border border-blue-900 rounded-2xl p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-white">Excel / CSV Format</h2>
-        <p className="text-xs text-gray-400">Your file should have these columns (header row required):</p>
-        <div className="bg-[#1A3A6B] rounded-lg p-3 text-xs text-gray-300 font-mono overflow-x-auto">
-          firstName | phone | email | gender | appliedProfile | appliedFor | leadSource | totalExperience | expectedSalary | lastSalary | previousCompany | notes
-        </div>
-        <ul className="text-xs text-gray-500 space-y-1 list-disc list-inside">
-          <li><strong className="text-gray-400">Required:</strong> firstName, phone</li>
-          <li>appliedProfile: Sales / DM / GD / Development / HR / Admin</li>
-          <li>gender: Male / Female / Other</li>
-          <li>leadSource: Internshala / Workindia / Indeed / LinkedIn / Walk-in / Reference / Others</li>
-          <li>Duplicates (same phone/email) are skipped automatically and reported</li>
-          <li>Max file size: 5 MB. Process up to ~1,000 rows per import.</li>
-        </ul>
+      <div className="bg-[#0A1628] border border-blue-900 rounded-2xl p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-white">CSV / Excel Format</h2>
+        <p className="text-xs text-gray-400">Columns required (header row must be present):</p>
 
-        {/* Download template */}
+        <div className="bg-[#1A3A6B] rounded-lg p-3 text-xs text-gray-300 font-mono overflow-x-auto whitespace-nowrap">
+          firstName, lastName, phone, email, gender, appliedProfile, appliedFor, leadSource, totalExperience, expectedSalary, lastSalary, previousCompany, notes
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 text-xs">
+          <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
+            <p className="text-gray-300 font-medium mb-1">Valid values for each column:</p>
+            <p className="text-gray-500"><span className="text-yellow-400">gender:</span> Male · Female · Other</p>
+            <p className="text-gray-500"><span className="text-yellow-400">appliedProfile:</span> Sales · DM · GD · Development · HR · Admin</p>
+            <p className="text-gray-500"><span className="text-yellow-400">appliedFor:</span> Full Time · Part Time · Internship · Freelance · WFH</p>
+            <p className="text-gray-500"><span className="text-yellow-400">leadSource:</span> LinkedIn · Indeed · Internshala · Workindia · Walk-in · Reference · Others</p>
+            <p className="text-green-600 mt-1">✓ Invalid values are auto-mapped to the closest option (e.g. "Naukri" → Others, "Software Engineer" → Development)</p>
+          </div>
+          <ul className="text-gray-500 space-y-0.5 list-disc list-inside">
+            <li><span className="text-red-400">Required:</span> firstName, phone</li>
+            <li>Duplicates (same phone or email) are skipped and reported</li>
+            <li>Max file size: 5 MB · up to ~1,000 rows per import</li>
+            <li>Supported: .csv · .xlsx · .xls</li>
+          </ul>
+        </div>
+
+        {/* Download template with correct sample data */}
         <a
-          href="data:text/csv;charset=utf-8,firstName,lastName,phone,email,gender,appliedProfile,appliedFor,leadSource,totalExperience,expectedSalary,lastSalary,previousCompany,notes%0AJohn,Doe,9999999999,john@email.com,Male,Sales,Full Time,LinkedIn,2,25000,20000,Previous Corp,Sample note"
+          href={`data:text/csv;charset=utf-8,${encodeURIComponent(
+            'firstName,lastName,phone,email,gender,appliedProfile,appliedFor,leadSource,totalExperience,expectedSalary,lastSalary,previousCompany,notes\n' +
+            'Amit,Sharma,9876543210,amit.sharma@company.com,Male,Development,Full Time,LinkedIn,3,70000,60000,TechCorp,React developer\n' +
+            'Priya,Singh,9988776655,priya.singh@company.com,Female,Sales,Full Time,Indeed,2,40000,35000,SalesCo,Good communication\n' +
+            'Rahul,Verma,9998887776,rahul.verma@company.com,Male,DM,Full Time,Internshala,1,30000,,DigitalAgency,SEO knowledge\n' +
+            'Neha,Gupta,9876541230,neha.gupta@company.com,Female,HR,Full Time,Reference,4,50000,45000,PeopleCorp,Payroll experience\n' +
+            'Vikram,Patil,9988223344,,Male,GD,Internship,Workindia,0,15000,,, Graphic design student'
+          )}`}
           download="candidates_template.csv"
-          className="inline-block text-xs text-[#1E6FD9] hover:text-[#00C6FF] border border-blue-800 rounded-lg px-3 py-2"
+          className="inline-flex items-center gap-2 text-xs text-[#1E6FD9] hover:text-[#00C6FF] border border-blue-800 rounded-lg px-4 py-2"
         >
-          Download Template CSV
+          ↓ Download Sample CSV Template
         </a>
       </div>
 
