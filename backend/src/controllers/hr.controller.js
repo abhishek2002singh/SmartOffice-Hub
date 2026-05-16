@@ -241,6 +241,55 @@ exports.deleteCandidate = async (req, res) => {
 // BULK IMPORT (Excel / CSV)
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Normalize enum values from CSV (be tolerant of user variations)
+const VALID_PROFILES   = ['Sales', 'DM', 'GD', 'Development', 'HR', 'Admin'];
+const VALID_FOR        = ['Internship', 'Full Time', 'Part Time', 'Freelance', 'WFH'];
+const VALID_SOURCES    = ['Internshala', 'Workindia', 'Indeed', 'LinkedIn', 'Walk-in', 'Reference', 'Others'];
+const VALID_GENDERS    = ['Male', 'Female', 'Other'];
+
+function normalizeProfile(val) {
+  if (!val) return 'Sales';
+  const v = String(val).toLowerCase();
+  if (v.includes('sales'))       return 'Sales';
+  if (v.includes('dm') || v.includes('digital') || v.includes('market')) return 'DM';
+  if (v.includes('gd') || v.includes('graphic') || v.includes('design') || v.includes('video') || v.includes('ui') || v.includes('ux')) return 'GD';
+  if (v.includes('dev') || v.includes('engineer') || v.includes('software') || v.includes('frontend') || v.includes('backend') || v.includes('full') || v.includes('qa') || v.includes('devops') || v.includes('system') || v.includes('data')) return 'Development';
+  if (v.includes('hr') || v.includes('human') || v.includes('talent') || v.includes('recruit')) return 'HR';
+  if (v.includes('admin') || v.includes('finance') || v.includes('operation') || v.includes('project') || v.includes('business') || v.includes('legal') || v.includes('content') || v.includes('product') || v.includes('manager') || v.includes('coordinator')) return 'Admin';
+  return VALID_PROFILES.includes(val) ? val : 'Sales';
+}
+
+function normalizeSource(val) {
+  if (!val) return 'Others';
+  const v = String(val).toLowerCase();
+  if (v.includes('internshala')) return 'Internshala';
+  if (v.includes('workindia'))   return 'Workindia';
+  if (v.includes('indeed'))      return 'Indeed';
+  if (v.includes('linkedin'))    return 'LinkedIn';
+  if (v.includes('walk'))        return 'Walk-in';
+  if (v.includes('refer'))       return 'Reference';
+  if (v.includes('naukri') || v.includes('shine') || v.includes('monster') || v.includes('apna')) return 'Others';
+  return VALID_SOURCES.includes(val) ? val : 'Others';
+}
+
+function normalizeFor(val) {
+  if (!val) return 'Full Time';
+  const v = String(val).toLowerCase();
+  if (v.includes('intern'))   return 'Internship';
+  if (v.includes('part'))     return 'Part Time';
+  if (v.includes('freelan'))  return 'Freelance';
+  if (v.includes('wfh') || v.includes('remote') || v.includes('work from home')) return 'WFH';
+  return VALID_FOR.includes(val) ? val : 'Full Time';
+}
+
+function normalizeGender(val) {
+  if (!val) return 'Male';
+  const v = String(val).toLowerCase();
+  if (v === 'female' || v === 'f') return 'Female';
+  if (v === 'other')               return 'Other';
+  return 'Male';
+}
+
 exports.bulkImport = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'No file uploaded' } });
@@ -274,15 +323,20 @@ exports.bulkImport = async (req, res) => {
           continue;
         }
 
+        const rawProfile = String(row.appliedProfile || row['Applied Profile'] || row.profile || '').trim();
+        const rawSource  = String(row.leadSource     || row['Lead Source']     || '').trim();
+        const rawFor     = String(row.appliedFor     || row['Applied For']     || '').trim();
+        const rawGender  = String(row.gender         || row.Gender             || '').trim();
+
         docs.push({
           firstName,
-          lastName:       String(row.lastName  || row['Last Name']  || '').trim(),
+          lastName:        String(row.lastName  || row['Last Name']  || '').trim(),
           phone,
-          email:          email || undefined,
-          gender:         row.gender  || row.Gender  || 'Male',
-          appliedProfile: row.appliedProfile || row['Applied Profile'] || row.profile || 'Sales',
-          appliedFor:     row.appliedFor     || row['Applied For']     || 'Full Time',
-          leadSource:     row.leadSource     || row['Lead Source']     || 'Others',
+          email:           email || undefined,
+          gender:          normalizeGender(rawGender),
+          appliedProfile:  normalizeProfile(rawProfile),
+          appliedFor:      normalizeFor(rawFor),
+          leadSource:      normalizeSource(rawSource),
           totalExperience: +row.totalExperience || +row['Experience (Years)'] || 0,
           expectedSalary:  +row.expectedSalary  || +row['Expected Salary']  || null,
           lastSalary:      +row.lastSalary       || +row['Last Salary']      || null,

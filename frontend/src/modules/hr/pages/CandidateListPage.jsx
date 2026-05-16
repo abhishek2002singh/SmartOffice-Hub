@@ -24,6 +24,7 @@ export default function CandidateListPage() {
   const [total, setTotal]           = useState(0)
   const [pages, setPages]           = useState(1)
   const [loading, setLoading]       = useState(true)
+  const [fetchError, setFetchError] = useState('')
   const [page, setPage]             = useState(1)
 
   const [filters, setFilters] = useState({
@@ -34,13 +35,16 @@ export default function CandidateListPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setFetchError('')
     try {
       const params = { page, limit: 20, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '')) }
       const r = await hrApi.listCandidates(params)
       setCandidates(r.data.data.candidates || [])
       setTotal(r.data.data.total || 0)
       setPages(r.data.data.pages || 1)
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      setFetchError(e.response?.data?.error?.message || e.message || 'Failed to load candidates')
+    }
     finally { setLoading(false) }
   }, [filters, page])
 
@@ -146,6 +150,10 @@ export default function CandidateListPage() {
           Rejected Pool →
         </button>
       </div>
+
+      {fetchError && (
+        <div className="bg-red-900/30 border border-red-800 text-red-300 rounded-xl px-4 py-3 text-sm">{fetchError}</div>
+      )}
 
       {/* Table */}
       {loading ? (

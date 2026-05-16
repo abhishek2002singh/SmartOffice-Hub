@@ -13,10 +13,8 @@ export const hrApi = {
   updateStatus:    (id, data) => api.patch(`/hr/candidates/${id}/status`, data),
   deleteCandidate: (id)     => api.delete(`/hr/candidates/${id}`),
 
-  // Bulk import (FormData with file)
-  bulkImport: (formData) => api.post('/hr/candidates/bulk-import', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
+  // Bulk import (FormData — let axios set Content-Type + boundary automatically)
+  bulkImport: (formData) => api.post('/hr/candidates/bulk-import', formData),
 
   // Follow-ups
   listFollowups:   (candidateId)             => api.get(`/hr/candidates/${candidateId}/followups`),
@@ -43,7 +41,7 @@ export const hrApi = {
 
   // Documents
   listDocuments:   (empId)          => api.get(`/hr/employees/${empId}/documents`),
-  uploadDocument:  (empId, fd)      => api.post(`/hr/employees/${empId}/documents`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadDocument:  (empId, fd)      => api.post(`/hr/employees/${empId}/documents`, fd),
   deleteDocument:  (empId, docId)   => api.delete(`/hr/employees/${empId}/documents/${docId}`),
 
   // Family
