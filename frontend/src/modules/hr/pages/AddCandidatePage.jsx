@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { hrApi } from '../../../api/hr.api'
 
 const STEPS = ['Personal', 'Background', 'Application', 'Skills']
@@ -43,29 +43,67 @@ const SELECT = "w-full bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-2 
 
 export default function AddCandidatePage() {
   const navigate = useNavigate()
+  const { id }   = useParams()           // present when editing
+  const isEdit   = Boolean(id)
+
   const [step, setStep]       = useState(0)
   const [saving, setSaving]   = useState(false)
+  const [loading, setLoading] = useState(isEdit)
   const [error, setError]     = useState('')
-  const [dupInfo, setDupInfo] = useState(null)  // duplicate detection result
-  const [skillMatrix, setSkillMatrix] = useState([])  // from HRConfig for selected profile
+  const [dupInfo, setDupInfo] = useState(null)
+  const [skillMatrix, setSkillMatrix] = useState([])
 
   const [form, setForm] = useState({
-    // Personal
     firstName: '', middleName: '', lastName: '',
     dob: '', gender: 'Male', maritalStatus: 'Unmarried',
     phone: '', altPhone: '', email: '', address: '',
     languagesKnown: '',
-    // Background
     education: '', lastSalary: '', previousCompany: '',
     previousProfile: '', totalExperience: '0', expectedSalary: '',
-    // Application
     appliedProfile: 'Sales', appliedFor: 'Full Time',
     leadSource: 'Others', referenceName: '',
     priority: 'Medium', callingStatus: 'Not Called', notes: '',
     cvLink: '', portfolioLink: '',
-    // Skills (selected as { skill, proficiency } objects)
     selectedSkills: [],
   })
+
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (!isEdit) return
+    hrApi.getCandidate(id).then(r => {
+      const c = r.data.data.candidate
+      setForm({
+        firstName:       c.firstName       || '',
+        middleName:      c.middleName      || '',
+        lastName:        c.lastName        || '',
+        dob:             c.dob ? c.dob.slice(0, 10) : '',
+        gender:          c.gender          || 'Male',
+        maritalStatus:   c.maritalStatus   || 'Unmarried',
+        phone:           c.phone           || '',
+        altPhone:        c.altPhone        || '',
+        email:           c.email           || '',
+        address:         c.address         || '',
+        languagesKnown:  (c.languagesKnown || []).join(', '),
+        education:       c.education       || '',
+        lastSalary:      c.lastSalary      != null ? String(c.lastSalary) : '',
+        previousCompany: c.previousCompany || '',
+        previousProfile: c.previousProfile || '',
+        totalExperience: String(c.totalExperience ?? 0),
+        expectedSalary:  c.expectedSalary  != null ? String(c.expectedSalary) : '',
+        appliedProfile:  c.appliedProfile  || 'Sales',
+        appliedFor:      c.appliedFor      || 'Full Time',
+        leadSource:      c.leadSource      || 'Others',
+        referenceName:   c.referenceName   || '',
+        priority:        c.priority        || 'Medium',
+        callingStatus:   c.callingStatus   || 'Not Called',
+        notes:           c.notes           || '',
+        cvLink:          c.cvLink          || '',
+        portfolioLink:   c.portfolioLink   || '',
+        selectedSkills:  c.skills          || [],
+      })
+    }).catch(() => setError('Failed to load candidate'))
+      .finally(() => setLoading(false))
+  }, [id, isEdit])
 
   // Load skill matrix when profile changes
   useEffect(() => {
@@ -116,24 +154,31 @@ export default function AddCandidatePage() {
       }
       delete payload.selectedSkills
 
-      const r = await hrApi.createCandidate(payload)
-      navigate(`/hr/candidates/${r.data.data.candidate._id}`)
+      if (isEdit) {
+        await hrApi.updateCandidate(id, payload)
+        navigate(`/hr/candidates/${id}`)
+      } else {
+        const r = await hrApi.createCandidate(payload)
+        navigate(`/hr/candidates/${r.data.data.candidate._id}`)
+      }
     } catch (err) {
       if (err.response?.data?.error?.code === 'DUPLICATE_CANDIDATE') {
         setDupInfo(err.response.data.error)
       } else {
-        setError(err.response?.data?.error?.message || 'Failed to create candidate')
+        setError(err.response?.data?.error?.message || (isEdit ? 'Failed to update candidate' : 'Failed to create candidate'))
       }
     } finally { setSaving(false) }
   }
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-5">
+      {loading && <div className="text-center py-12 text-gray-500">Loading...</div>}
+      {!loading && <>
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/hr/candidates')} className="text-xs text-gray-500 hover:text-gray-300">
+        <button onClick={() => navigate(isEdit ? `/hr/candidates/${id}` : '/hr/candidates')} className="text-xs text-gray-500 hover:text-gray-300">
           ← Back
         </button>
-        <h1 className="text-xl font-bold text-white">Add Candidate</h1>
+        <h1 className="text-xl font-bold text-white">{isEdit ? 'Edit Candidate' : 'Add Candidate'}</h1>
       </div>
 
       <StepIndicator step={step} total={STEPS.length} />
@@ -346,10 +391,11 @@ export default function AddCandidatePage() {
         ) : (
           <button onClick={() => handleSubmit(false)} disabled={saving}
             className="px-6 py-2.5 bg-green-700 hover:bg-green-600 text-white rounded-xl text-sm font-medium disabled:opacity-50">
-            {saving ? 'Saving...' : 'Add Candidate'}
+            {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Candidate'}
           </button>
         )}
       </div>
+      </>}
     </div>
   )
 }

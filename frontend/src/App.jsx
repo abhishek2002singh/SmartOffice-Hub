@@ -170,7 +170,8 @@ function AppRoutes() {
           <Route path="hr/candidates"          element={<ProtectedRoute minRole="DEPT_HEAD"><L><CandidateListPage /></L></ProtectedRoute>} />
           <Route path="hr/candidates/new"      element={<ProtectedRoute minRole="DEPT_HEAD"><L><AddCandidatePage /></L></ProtectedRoute>} />
           <Route path="hr/candidates/import"   element={<ProtectedRoute minRole="DEPT_HEAD"><L><BulkImportPage /></L></ProtectedRoute>} />
-          <Route path="hr/candidates/rejected" element={<ProtectedRoute minRole="DEPT_HEAD"><L><RejectedPoolPage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates/rejected"  element={<ProtectedRoute minRole="DEPT_HEAD"><L><RejectedPoolPage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates/:id/edit" element={<ProtectedRoute minRole="DEPT_HEAD"><L><AddCandidatePage /></L></ProtectedRoute>} />
           <Route path="hr/candidates/:id"      element={<ProtectedRoute minRole="DEPT_HEAD"><L><CandidateDetailPage /></L></ProtectedRoute>} />
 
           {/* HR — Employees */}
