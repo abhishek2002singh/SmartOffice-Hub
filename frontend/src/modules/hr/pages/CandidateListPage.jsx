@@ -41,7 +41,7 @@ export default function CandidateListPage() {
     minSalary: '', maxSalary: '',
   })
 
-  // Load all skills from departments for the filter
+  // Load available skills from departments (for suggestions)
   useEffect(() => {
     api.get('/departments').then(r => {
       const depts = r.data?.data?.departments || []
@@ -77,12 +77,23 @@ export default function CandidateListPage() {
   const set = (k, v) => { setFilters(f => ({ ...f, [k]: v })); setPage(1) }
 
   const addSkill = (skill) => {
-    if (!selectedSkills.includes(skill)) {
-      setSelectedSkills(s => [...s, skill])
+    const trimmed = skill.trim()
+    if (!trimmed) return
+    if (!selectedSkills.includes(trimmed)) {
+      setSelectedSkills(s => [...s, trimmed])
       setPage(1)
     }
     setSkillInput('')
     setShowSkillDropdown(false)
+  }
+
+  const handleSkillKeyDown = (e) => {
+    if (e.key === 'Enter' && skillInput.trim()) {
+      e.preventDefault()
+      addSkill(skillInput)
+    } else if (e.key === 'Backspace' && !skillInput && selectedSkills.length) {
+      removeSkill(selectedSkills[selectedSkills.length - 1])
+    }
   }
 
   const removeSkill = (skill) => {
@@ -182,13 +193,15 @@ export default function CandidateListPage() {
 
         {/* Skill multi-select filter */}
         <div className="relative">
-          <p className="text-xs text-gray-500 mb-1.5">Filter by Skills (multi-select)</p>
-          <div className="flex flex-wrap gap-1.5 items-center min-h-[36px] bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-1.5">
+          <p className="text-xs text-gray-500 mb-1.5">
+            Filter by Skills — type &amp; press <kbd className="px-1 py-0.5 rounded text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>Enter</kbd> to add, or pick from suggestions
+          </p>
+          <div className="flex flex-wrap gap-1.5 items-center bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-1.5 min-h-[40px]">
             {selectedSkills.map(s => (
               <span key={s} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: 'rgba(30,111,217,0.4)', color: '#fff' }}>
+                style={{ backgroundColor: 'rgba(30,111,217,0.5)', color: '#fff', border: '1px solid rgba(30,111,217,0.8)' }}>
                 {s}
-                <button onClick={() => removeSkill(s)} className="text-gray-300 hover:text-white">
+                <button onClick={() => removeSkill(s)} className="text-gray-300 hover:text-white ml-0.5">
                   <X size={10} />
                 </button>
               </span>
@@ -197,26 +210,30 @@ export default function CandidateListPage() {
               value={skillInput}
               onChange={e => { setSkillInput(e.target.value); setShowSkillDropdown(true) }}
               onFocus={() => setShowSkillDropdown(true)}
-              onBlur={() => setTimeout(() => setShowSkillDropdown(false), 150)}
-              placeholder={selectedSkills.length ? '' : 'Type to search skills...'}
-              className="flex-1 min-w-[120px] bg-transparent text-white text-sm placeholder-gray-500 outline-none"
+              onBlur={() => setTimeout(() => setShowSkillDropdown(false), 180)}
+              onKeyDown={handleSkillKeyDown}
+              placeholder={selectedSkills.length ? 'Add more...' : 'e.g. React, SEO, Photoshop — press Enter'}
+              className="flex-1 min-w-[200px] bg-transparent text-white text-sm placeholder-gray-500 outline-none py-0.5"
             />
           </div>
-          {showSkillDropdown && filteredSkillOptions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 z-20 mt-1 rounded-lg shadow-lg overflow-y-auto max-h-40"
+          {showSkillDropdown && (filteredSkillOptions.length > 0 || skillInput.trim()) && (
+            <div className="absolute top-full left-0 right-0 z-20 mt-1 rounded-lg shadow-lg overflow-y-auto max-h-48"
               style={{ backgroundColor: '#1A3A6B', border: '1px solid rgba(30,111,217,0.5)' }}>
+              {/* "Add as filter" option for free-text */}
+              {skillInput.trim() && !selectedSkills.includes(skillInput.trim()) && (
+                <button onMouseDown={() => addSkill(skillInput)}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-white/10 flex items-center gap-2"
+                  style={{ color: '#00C6FF', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="text-xs bg-blue-700 px-1.5 py-0.5 rounded">+ Add</span>
+                  <span>&quot;{skillInput.trim()}&quot;</span>
+                </button>
+              )}
               {filteredSkillOptions.map(s => (
                 <button key={s} onMouseDown={() => addSkill(s)}
                   className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-white/10 hover:text-white">
                   {s}
                 </button>
               ))}
-            </div>
-          )}
-          {showSkillDropdown && skillInput && filteredSkillOptions.length === 0 && (
-            <div className="absolute top-full left-0 z-20 mt-1 rounded-lg px-3 py-2 text-xs text-gray-500"
-              style={{ backgroundColor: '#1A3A6B', border: '1px solid rgba(30,111,217,0.3)' }}>
-              No matching skills found
             </div>
           )}
         </div>

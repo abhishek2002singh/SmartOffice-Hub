@@ -157,7 +157,9 @@ exports.listCandidates = async (req, res) => {
     }
     if (skills) {
       const skillList = (Array.isArray(skills) ? skills : [skills]).map(s => s.trim()).filter(Boolean);
-      if (skillList.length) filter['skills.skill'] = { $in: skillList };
+      if (skillList.length) {
+        filter['skills.skill'] = { $in: skillList.map(s => new RegExp(s, 'i')) };
+      }
     }
     if (q) {
       const rx = { $regex: q, $options: 'i' };
