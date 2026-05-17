@@ -75,6 +75,10 @@ function getDefaultPermissions(designation = '', deptName = '') {
   return base;
 }
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Attempt Google Drive upload — returns { fileId, webViewLink } or nulls on failure
 async function tryDriveUpload(buffer, mimeType, fileName, folderId) {
   try {
@@ -131,7 +135,7 @@ exports.listCandidates = async (req, res) => {
       q, status, appliedProfile, appliedFor, leadSource,
       gender, priority, callingStatus,
       minExp, maxExp, minSalary, maxSalary,
-      skills,
+      skills, skillMatch = 'any',
       page = 1, limit = 20, sort = '-createdAt',
     } = req.query;
 
@@ -156,9 +160,16 @@ exports.listCandidates = async (req, res) => {
       if (maxSalary !== undefined) filter.expectedSalary.$lte = +maxSalary;
     }
     if (skills) {
-      const skillList = (Array.isArray(skills) ? skills : [skills]).map(s => s.trim()).filter(Boolean);
+      const skillList = Array.isArray(skills)
+        ? skills.map(s => s.trim()).filter(Boolean)
+        : String(skills).split(',').map(s => s.trim()).filter(Boolean);
       if (skillList.length) {
-        filter['skills.skill'] = { $in: skillList.map(s => new RegExp(s, 'i')) };
+        const skillRegexes = skillList.map(s => new RegExp(escapeRegex(s), 'i'));
+        if (skillMatch === 'all' && skillList.length > 1) {
+          filter.$and = skillRegexes.map(r => ({ 'skills.skill': r }));
+        } else {
+          filter['skills.skill'] = { $in: skillRegexes };
+        }
       }
     }
     if (q) {

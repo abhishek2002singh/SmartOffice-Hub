@@ -95,6 +95,7 @@ candidateSchema.index({ phone: 1, deletedAt: 1 });
 candidateSchema.index({ email: 1, deletedAt: 1 });
 candidateSchema.index({ appliedProfile: 1, status: 1, deletedAt: 1 });
 candidateSchema.index({ createdAt: -1 });
+candidateSchema.index({ 'skills.skill': 1 });
 
 // Virtual: full name
 candidateSchema.virtual('fullName').get(function () {

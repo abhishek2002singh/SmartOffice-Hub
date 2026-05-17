@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { hrApi } from '../../../api/hr.api'
-import api from '../../../api/axios'
 import { X } from 'lucide-react'
+import SkillFilter from '../components/SkillFilter'
 
 const PROFILES  = ['Sales', 'DM', 'GD', 'Development', 'HR', 'Admin']
 const STATUSES  = ['New', 'Shortlisted', 'Interview Done', 'Selected', 'Rejected', 'On Hold']
@@ -22,36 +22,34 @@ const PRIORITY_COLORS = { High: 'text-red-400', Medium: 'text-yellow-400', Low: 
 
 export default function CandidateListPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const [candidates, setCandidates] = useState([])
   const [total, setTotal]           = useState(0)
   const [pages, setPages]           = useState(1)
   const [loading, setLoading]       = useState(true)
   const [fetchError, setFetchError] = useState('')
-  const [page, setPage]             = useState(1)
 
-  // All available skills from departments (for the filter dropdown)
-  const [availableSkills, setAvailableSkills] = useState([])
-  const [selectedSkills, setSelectedSkills]   = useState([]) // array of skill name strings
-  const [skillInput, setSkillInput]           = useState('')
-  const [showSkillDropdown, setShowSkillDropdown] = useState(false)
-
+  // Initialise from URL so browser back/refresh retains filters
+  const [page, setPage] = useState(Number(searchParams.get('page')) || 1)
+  const [selectedSkills, setSelectedSkills] = useState(
+    () => searchParams.get('skills')?.split(',').filter(Boolean) || []
+  )
+  const [skillMatch, setSkillMatch] = useState(searchParams.get('skillMatch') || 'any')
   const [filters, setFilters] = useState({
-    q: '', status: '', appliedProfile: '', appliedFor: '',
-    leadSource: '', gender: '', minExp: '', maxExp: '',
-    minSalary: '', maxSalary: '',
+    q:              searchParams.get('q')              || '',
+    status:         searchParams.get('status')         || '',
+    appliedProfile: searchParams.get('appliedProfile') || '',
+    appliedFor:     searchParams.get('appliedFor')     || '',
+    leadSource:     searchParams.get('leadSource')     || '',
+    gender:         searchParams.get('gender')         || '',
+    minExp:         searchParams.get('minExp')         || '',
+    maxExp:         searchParams.get('maxExp')         || '',
+    minSalary:      searchParams.get('minSalary')      || '',
+    maxSalary:      searchParams.get('maxSalary')      || '',
   })
 
-  // Load available skills from departments (for suggestions)
-  useEffect(() => {
-    api.get('/departments').then(r => {
-      const depts = r.data?.data?.departments || []
-      const skills = []
-      depts.forEach(d => (d.skills || []).forEach(s => {
-        if (!skills.includes(s.name)) skills.push(s.name)
-      }))
-      setAvailableSkills(skills.sort())
-    }).catch(() => {})
-  }, [])
+  const debounceRef = useRef(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -61,55 +59,58 @@ export default function CandidateListPage() {
         page, limit: 20,
         ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '')),
       }
-      if (selectedSkills.length) params.skills = selectedSkills
+      if (selectedSkills.length) {
+        params.skills = selectedSkills.join(',')
+        if (selectedSkills.length > 1) params.skillMatch = skillMatch
+      }
       const r = await hrApi.listCandidates(params)
       setCandidates(r.data.data.candidates || [])
       setTotal(r.data.data.total || 0)
       setPages(r.data.data.pages || 1)
     } catch (e) {
       setFetchError(e.response?.data?.error?.message || e.message || 'Failed to load candidates')
-    }
-    finally { setLoading(false) }
-  }, [filters, page, selectedSkills])
+    } finally { setLoading(false) }
+  }, [filters, page, selectedSkills, skillMatch])
 
-  useEffect(() => { load() }, [load])
+  // Debounced re-fetch on any filter/page change
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(load, 300)
+    return () => clearTimeout(debounceRef.current)
+  }, [load])
+
+  // Sync URL params (replace so back button still works)
+  useEffect(() => {
+    const p = {}
+    if (filters.q)              p.q              = filters.q
+    if (filters.status)         p.status         = filters.status
+    if (filters.appliedProfile) p.appliedProfile = filters.appliedProfile
+    if (filters.appliedFor)     p.appliedFor     = filters.appliedFor
+    if (filters.leadSource)     p.leadSource     = filters.leadSource
+    if (filters.gender)         p.gender         = filters.gender
+    if (filters.minExp)         p.minExp         = filters.minExp
+    if (filters.maxExp)         p.maxExp         = filters.maxExp
+    if (filters.minSalary)      p.minSalary      = filters.minSalary
+    if (filters.maxSalary)      p.maxSalary      = filters.maxSalary
+    if (selectedSkills.length)  p.skills         = selectedSkills.join(',')
+    if (selectedSkills.length > 1) p.skillMatch  = skillMatch
+    if (page > 1)               p.page           = String(page)
+    setSearchParams(p, { replace: true })
+  }, [filters, selectedSkills, skillMatch, page, setSearchParams])
 
   const set = (k, v) => { setFilters(f => ({ ...f, [k]: v })); setPage(1) }
 
-  const addSkill = (skill) => {
-    const trimmed = skill.trim()
-    if (!trimmed) return
-    if (!selectedSkills.includes(trimmed)) {
-      setSelectedSkills(s => [...s, trimmed])
-      setPage(1)
-    }
-    setSkillInput('')
-    setShowSkillDropdown(false)
-  }
-
-  const handleSkillKeyDown = (e) => {
-    if (e.key === 'Enter' && skillInput.trim()) {
-      e.preventDefault()
-      addSkill(skillInput)
-    } else if (e.key === 'Backspace' && !skillInput && selectedSkills.length) {
-      removeSkill(selectedSkills[selectedSkills.length - 1])
-    }
-  }
-
-  const removeSkill = (skill) => {
-    setSelectedSkills(s => s.filter(x => x !== skill))
-    setPage(1)
-  }
+  const handleSkillsChange = (newSkills) => { setSelectedSkills(newSkills); setPage(1) }
+  const removeSkill = (skill) => { setSelectedSkills(s => s.filter(x => x !== skill)); setPage(1) }
 
   const clearAll = () => {
     setFilters({ q:'',status:'',appliedProfile:'',appliedFor:'',leadSource:'',gender:'',minExp:'',maxExp:'',minSalary:'',maxSalary:'' })
     setSelectedSkills([])
+    setSkillMatch('any')
     setPage(1)
   }
 
-  const filteredSkillOptions = availableSkills.filter(s =>
-    s.toLowerCase().includes(skillInput.toLowerCase()) && !selectedSkills.includes(s)
-  )
+  const hasActiveFilters = selectedSkills.length > 0 || Object.values(filters).some(v => v !== '')
 
   return (
     <div className="p-6 space-y-5">
@@ -117,7 +118,9 @@ export default function CandidateListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Candidates</h1>
-          <p className="text-gray-400 text-sm mt-1">{total} total candidates</p>
+          <p className="text-gray-400 text-sm mt-1">
+            {loading ? 'Loading...' : `${total} candidate${total !== 1 ? 's' : ''} found`}
+          </p>
         </div>
         <div className="flex gap-3">
           <button onClick={() => navigate('/hr/candidates/import')}
@@ -165,81 +168,75 @@ export default function CandidateListPage() {
             <option value="">Any Gender</option>
             {['Male', 'Female', 'Other'].map(g => <option key={g} value={g}>{g}</option>)}
           </select>
-          <input
-            type="number" value={filters.minExp} onChange={e => set('minExp', e.target.value)}
+          <input type="number" value={filters.minExp} onChange={e => set('minExp', e.target.value)}
             placeholder="Min Exp (yrs)"
             className="bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
           />
-          <input
-            type="number" value={filters.maxExp} onChange={e => set('maxExp', e.target.value)}
+          <input type="number" value={filters.maxExp} onChange={e => set('maxExp', e.target.value)}
             placeholder="Max Exp (yrs)"
             className="bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
           />
-          <input
-            type="number" value={filters.minSalary} onChange={e => set('minSalary', e.target.value)}
+          <input type="number" value={filters.minSalary} onChange={e => set('minSalary', e.target.value)}
             placeholder="Min Salary (₹)"
             className="bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
           />
-          <input
-            type="number" value={filters.maxSalary} onChange={e => set('maxSalary', e.target.value)}
+          <input type="number" value={filters.maxSalary} onChange={e => set('maxSalary', e.target.value)}
             placeholder="Max Salary (₹)"
             className="bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
           />
-          <button onClick={clearAll}
-            className="text-xs text-gray-400 hover:text-white border border-blue-900 rounded-lg px-3 py-2">
-            Clear All
-          </button>
         </div>
 
-        {/* Skill multi-select filter */}
-        <div className="relative">
-          <p className="text-xs text-gray-500 mb-1.5">
-            Filter by Skills — type &amp; press <kbd className="px-1 py-0.5 rounded text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>Enter</kbd> to add, or pick from suggestions
-          </p>
-          <div className="flex flex-wrap gap-1.5 items-center bg-[#1A3A6B] border border-blue-800 rounded-lg px-3 py-1.5 min-h-[40px]">
-            {selectedSkills.map(s => (
-              <span key={s} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: 'rgba(30,111,217,0.5)', color: '#fff', border: '1px solid rgba(30,111,217,0.8)' }}>
-                {s}
-                <button onClick={() => removeSkill(s)} className="text-gray-300 hover:text-white ml-0.5">
+        {/* Skill filter row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <SkillFilter
+            selectedSkills={selectedSkills}
+            onChange={handleSkillsChange}
+            profile={filters.appliedProfile}
+          />
+          {hasActiveFilters && (
+            <button onClick={clearAll}
+              className="text-xs text-gray-400 hover:text-white border border-blue-900 rounded-lg px-3 py-2 transition-colors">
+              Clear All
+            </button>
+          )}
+        </div>
+
+        {/* Active skill chips + Any/All toggle */}
+        {selectedSkills.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs text-gray-500 font-medium">Active skills:</span>
+            {selectedSkills.map(skill => (
+              <span key={skill}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium"
+                style={{ backgroundColor: 'rgba(30,111,217,0.25)', color: '#00C6FF', border: '1px solid rgba(30,111,217,0.6)' }}>
+                {skill}
+                <button onClick={() => removeSkill(skill)} className="hover:text-white ml-0.5 leading-none">
                   <X size={10} />
                 </button>
               </span>
             ))}
-            <input
-              value={skillInput}
-              onChange={e => { setSkillInput(e.target.value); setShowSkillDropdown(true) }}
-              onFocus={() => setShowSkillDropdown(true)}
-              onBlur={() => setTimeout(() => setShowSkillDropdown(false), 180)}
-              onKeyDown={handleSkillKeyDown}
-              placeholder={selectedSkills.length ? 'Add more...' : 'e.g. React, SEO, Photoshop — press Enter'}
-              className="flex-1 min-w-[200px] bg-transparent text-white text-sm placeholder-gray-500 outline-none py-0.5"
-            />
+            {selectedSkills.length > 1 && (
+              <div className="flex items-center gap-1 ml-2">
+                <span className="text-xs text-gray-500">Match:</span>
+                <button
+                  onClick={() => setSkillMatch('any')}
+                  className={`text-xs px-2.5 py-1 rounded transition-colors ${
+                    skillMatch === 'any' ? 'bg-[#1E6FD9] text-white' : 'bg-blue-900/30 text-gray-400 hover:text-white'
+                  }`}
+                >Any</button>
+                <button
+                  onClick={() => setSkillMatch('all')}
+                  className={`text-xs px-2.5 py-1 rounded transition-colors ${
+                    skillMatch === 'all' ? 'bg-[#1E6FD9] text-white' : 'bg-blue-900/30 text-gray-400 hover:text-white'
+                  }`}
+                >All</button>
+              </div>
+            )}
           </div>
-          {showSkillDropdown && (filteredSkillOptions.length > 0 || skillInput.trim()) && (
-            <div className="absolute top-full left-0 right-0 z-20 mt-1 rounded-lg shadow-lg overflow-y-auto max-h-48"
-              style={{ backgroundColor: '#1A3A6B', border: '1px solid rgba(30,111,217,0.5)' }}>
-              {/* "Add as filter" option for free-text */}
-              {skillInput.trim() && !selectedSkills.includes(skillInput.trim()) && (
-                <button onMouseDown={() => addSkill(skillInput)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-white/10 flex items-center gap-2"
-                  style={{ color: '#00C6FF', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-xs bg-blue-700 px-1.5 py-0.5 rounded">+ Add</span>
-                  <span>&quot;{skillInput.trim()}&quot;</span>
-                </button>
-              )}
-              {filteredSkillOptions.map(s => (
-                <button key={s} onMouseDown={() => addSkill(s)}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-white/10 hover:text-white">
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Quick status filter tabs */}
+      {/* Quick status tabs */}
       <div className="flex gap-2 flex-wrap">
         {['', ...STATUSES].map(s => (
           <button key={s} onClick={() => set('status', s)}
@@ -265,7 +262,16 @@ export default function CandidateListPage() {
       {loading ? (
         <div className="text-center text-gray-400 py-12">Loading...</div>
       ) : candidates.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">No candidates found.</div>
+        <div className="text-center py-16">
+          <p className="text-gray-500 text-sm mb-3">
+            {hasActiveFilters ? 'No candidates match your current filters.' : 'No candidates yet.'}
+          </p>
+          {hasActiveFilters && (
+            <button onClick={clearAll} className="text-sm text-[#1E6FD9] hover:underline">
+              Clear all filters
+            </button>
+          )}
+        </div>
       ) : (
         <div className="bg-[#0A1628] border border-blue-900 rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
