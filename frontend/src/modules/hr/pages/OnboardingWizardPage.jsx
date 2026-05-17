@@ -48,6 +48,7 @@ export default function OnboardingWizardPage() {
   const [employees, setEmployees]     = useState([])
   const [saving, setSaving]           = useState(false)
   const [error, setError]             = useState('')
+  const [successData, setSuccessData] = useState(null) // { employee, loginCredentials }
 
   const [form, setForm] = useState({
     // Basic (from candidate — pre-filled)
@@ -157,12 +158,70 @@ export default function OnboardingWizardPage() {
         return
       }
       const r = await hrApi.onboardEmployee(candidateId, payload)
-      navigate(`/hr/employees/${r.data.data.employee._id}`)
+      setSuccessData(r.data.data)
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Onboarding failed')
     } finally {
       setSaving(false)
     }
+  }
+
+  // ── Success modal after onboarding ──────────────────────────────────────────
+  if (successData) {
+    const { employee, loginCredentials } = successData
+    const fullName = [employee.firstName, employee.middleName, employee.lastName].filter(Boolean).join(' ')
+    const copyText = loginCredentials
+      ? `Employee: ${fullName}\nEmployee Code: ${employee.employeeCode}\nLogin Email: ${loginCredentials.email}\nPassword: ${loginCredentials.tempPassword}\nLogin URL: ${loginCredentials.loginUrl || window.location.origin + '/login'}`
+      : `Employee: ${fullName}\nEmployee Code: ${employee.employeeCode}`
+
+    return (
+      <div className="p-6 max-w-xl mx-auto space-y-6" style={{ color: '#fff' }}>
+        <div className="rounded-2xl p-8 text-center space-y-4" style={{ backgroundColor: '#0A1628', border: '1px solid rgba(16,185,129,0.4)' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: 'rgba(16,185,129,0.2)' }}>
+            <UserCheck size={32} style={{ color: '#10B981' }} />
+          </div>
+          <h2 className="text-xl font-bold text-white">Onboarding Complete!</h2>
+          <p className="text-gray-400 text-sm">{fullName} has been successfully onboarded as <span className="text-white font-semibold">{employee.employeeCode}</span>.</p>
+        </div>
+
+        {loginCredentials && (
+          <div className="rounded-2xl p-6 space-y-4" style={{ backgroundColor: '#0A1628', border: '1px solid rgba(30,111,217,0.4)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-yellow-400" />
+              <p className="text-sm font-semibold text-yellow-300">AMS Login Credentials — Share with Employee</p>
+            </div>
+            <div className="rounded-xl p-4 space-y-2 font-mono text-sm" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+              <p><span className="text-gray-500">Email:</span> <span className="text-white">{loginCredentials.email}</span></p>
+              <p><span className="text-gray-500">Password:</span> <span className="text-green-400 font-bold">{loginCredentials.tempPassword}</span></p>
+              <p><span className="text-gray-500">Login URL:</span> <span className="text-blue-400">{loginCredentials.loginUrl || window.location.origin + '/login'}</span></p>
+            </div>
+            <p className="text-xs text-gray-500">These credentials are shown only once. Copy and share via WhatsApp/email.</p>
+            <button
+              onClick={() => { navigator.clipboard.writeText(copyText); }}
+              className="w-full py-2 rounded-lg text-sm font-medium border border-blue-700 text-blue-400 hover:bg-blue-700/20 transition-colors"
+            >
+              Copy Credentials to Clipboard
+            </button>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate(`/hr/employees/${employee._id}`)}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white"
+            style={{ backgroundColor: '#1E6FD9' }}
+          >
+            View Employee Profile
+          </button>
+          <button
+            onClick={() => navigate('/hr/employees')}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-white/5 text-gray-300 hover:text-white"
+          >
+            Back to Directory
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

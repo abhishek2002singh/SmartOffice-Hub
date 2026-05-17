@@ -1,4 +1,5 @@
 const mongoose  = require('mongoose');
+const crypto    = require('crypto');
 const XLSX      = require('xlsx');
 const Candidate          = require('../models/Candidate');
 const CandidateFollowup  = require('../models/CandidateFollowup');
@@ -8,6 +9,7 @@ const Employee           = require('../models/Employee');
 const EmployeeDocument   = require('../models/EmployeeDocument');
 const EmployeeFamilyMember = require('../models/EmployeeFamilyMember');
 const User               = require('../models/User');
+const Department         = require('../models/Department');
 const { logAudit } = require('../middleware/auditLogger');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -26,6 +28,51 @@ async function generateEmployeeCode() {
   const code = includeYear ? `${prefix}-${year}-${seq}` : `${prefix}-${seq}`;
   await HRConfig.updateOne({ _singleton: 'hr_config' }, { $inc: { 'employeeId.nextSequence': 1 } });
   return code;
+}
+
+function generateTempPassword() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pwd = '';
+  for (let i = 0; i < 10; i++) {
+    pwd += chars.charAt(crypto.randomInt(0, chars.length));
+  }
+  return pwd + '@1';
+}
+
+function getDefaultPermissions(designation = '', deptName = '') {
+  const role = designation.toLowerCase();
+  const dept = deptName.toLowerCase();
+  const base = [
+    'self:profile:read', 'self:profile:update',
+    'self:leave:apply', 'self:payslip:read',
+    'self:attendance:checkin', 'sops:read',
+  ];
+  if (dept.includes('sales')) {
+    if (role.includes('head') || role.includes('manager'))
+      return [...base, 'crm:lead:read', 'crm:lead:update', 'crm:client:read', 'crm:report:read', 'hr:team:read'];
+    return [...base, 'crm:lead:create', 'crm:lead:read', 'crm:lead:update', 'crm:client:read', 'crm:communication:create'];
+  }
+  if (dept.includes('digital') || dept.includes('dm') || dept.includes('marketing')) {
+    if (role.includes('head') || role.includes('manager'))
+      return [...base, 'dm:daily_log:read', 'dm:audit_report:approve', 'dm:client_platform:manage', 'hr:team:read'];
+    return [...base, 'dm:daily_log:create', 'dm:daily_log:read', 'dm:audit_report:create', 'gd:task:create'];
+  }
+  if (dept.includes('graphic') || dept.includes('gd') || dept.includes('design') || dept.includes('video')) {
+    if (role.includes('head') || role.includes('manager'))
+      return [...base, 'gd:task:read', 'gd:task:update', 'gd:team:manage', 'hr:team:read'];
+    return [...base, 'gd:task:read', 'gd:task:update', 'gd:file:upload', 'gd:comment:create'];
+  }
+  if (dept.includes('dev') || dept.includes('development') || dept.includes('tech')) {
+    if (role.includes('head') || role.includes('manager') || role.includes('lead'))
+      return [...base, 'dev:project:read', 'dev:project:update', 'dev:handover:accept', 'dev:team:manage', 'hr:team:read'];
+    return [...base, 'dev:project:read', 'dev:task:create', 'dev:task:update', 'dev:bug:create', 'dev:time_log:create'];
+  }
+  if (dept.includes('hr') || dept.includes('human')) {
+    if (role.includes('head') || role.includes('manager'))
+      return [...base, 'hr:candidate:read', 'hr:candidate:create', 'hr:employee:read', 'hr:employee:update', 'hr:attendance:read', 'hr:leave:read', 'hr:payroll:read', 'sops:create'];
+    return [...base, 'hr:candidate:read', 'hr:candidate:create', 'hr:employee:read', 'hr:attendance:read', 'hr:leave:read'];
+  }
+  return base;
 }
 
 // Attempt Google Drive upload — returns { fileId, webViewLink } or nulls on failure
@@ -612,29 +659,39 @@ exports.onboardEmployee = async (req, res) => {
     // Generate employee code
     const employeeCode = await generateEmployeeCode();
 
+    // Determine role from designation
+    const isHead = /head|manager|director|vp|lead/i.test(designation || '');
+    const userRole = isHead ? 'DEPT_HEAD' : 'TEAM_MEMBER';
+
+    // Resolve department name for permission mapping
+    const deptDoc = departmentId ? await Department.findById(departmentId).lean() : null;
+    const deptName = deptDoc?.name || '';
+    const autoPermissions = getDefaultPermissions(designation, deptName);
+
     // Always create an AMS User account; use generated email if no officialEmail
     let userId = null;
+    let tempPassword = null;
     const emailToUse = officialEmail
       ? officialEmail.toLowerCase()
       : `${employeeCode.toLowerCase()}@ank.internal`;
     const existingUser = await User.findOne({ email: emailToUse });
     if (existingUser) {
       userId = existingUser._id;
-      if (departmentId && !existingUser.department) {
-        existingUser.department = departmentId;
-        existingUser.updatedBy = req.user.userId;
-        await existingUser.save();
-      }
+      // Sync department + role if not set
+      let changed = false;
+      if (departmentId && !existingUser.department) { existingUser.department = departmentId; changed = true; }
+      if (!existingUser.permissions?.length) { existingUser.permissions = autoPermissions; changed = true; }
+      if (changed) { existingUser.updatedBy = req.user.userId; await existingUser.save(); }
     } else {
-      const defaultPassword = `ANK@${new Date().getFullYear()}`;
+      tempPassword = generateTempPassword();
       const newUser = await User.create({
-        name:       `${candidate.firstName} ${candidate.lastName}`.trim(),
-        email:      emailToUse,
-        password:   defaultPassword,
-        role:       'TEAM_MEMBER',
-        department: departmentId || null,
-        permissions: [],
-        createdBy:  req.user.userId,
+        name:        `${candidate.firstName} ${candidate.lastName}`.trim(),
+        email:       emailToUse,
+        password:    tempPassword,
+        role:        userRole,
+        department:  departmentId || null,
+        permissions: autoPermissions,
+        createdBy:   req.user.userId,
       });
       userId = newUser._id;
     }
@@ -674,7 +731,19 @@ exports.onboardEmployee = async (req, res) => {
     await candidate.save();
 
     await logAudit({ userId: req.user.userId, action: 'CREATE', resource: 'employee', resourceId: employee._id, after: { employeeCode, candidateId: candidate._id }, req });
-    res.status(201).json({ success: true, data: { employee }, message: `Employee ${employeeCode} onboarded` });
+    res.status(201).json({
+      success: true,
+      data: {
+        employee,
+        loginCredentials: tempPassword ? {
+          email:       emailToUse,
+          tempPassword,
+          loginUrl:    `${process.env.FRONTEND_URL || ''}/login`,
+          note:        'Share these credentials with the employee. They can change the password after first login.',
+        } : null,
+      },
+      message: `Employee ${employeeCode} onboarded successfully${tempPassword ? '. AMS account created.' : '.'}`,
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
   }
