@@ -1,26 +1,57 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { hrApi } from '../../../api/hr.api'
+import api from '../../../api/axios'
 import {
-  User, Briefcase, FolderOpen, Users, ArrowLeft,
+  FolderOpen, ArrowLeft,
   Upload, Trash2, Plus, X, Edit3, Check,
 } from 'lucide-react'
 
 const TABS = ['Profile', 'Employment', 'Documents', 'Family']
-
-const FIELD_ROW = ({ label, value }) => (
-  <div className="flex flex-col gap-0.5">
-    <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
-    <span className="text-sm text-white">{value || '—'}</span>
-  </div>
-)
 
 const DOC_TYPE_LABELS = {
   offer_letter: 'Offer Letter', joining_letter: 'Joining Letter', appointment_letter: 'Appointment Letter',
   id_proof: 'ID Proof', address_proof: 'Address Proof', pan_card: 'PAN Card',
   aadhaar_card: 'Aadhaar Card', education: 'Education', experience: 'Experience',
   relieving: 'Relieving Letter', nda: 'NDA', other: 'Other',
+}
+
+function ReadField({ label, value }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
+      <span className="text-sm text-white">{value || '—'}</span>
+    </div>
+  )
+}
+
+const inp = 'px-2 py-1.5 rounded-lg bg-white/5 border border-white/15 text-sm text-white outline-none focus:border-blue-500 w-full'
+
+function EditField({ label, field, editData, setEditData, type = 'text', options, disabled }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
+      {options ? (
+        <select
+          value={editData[field] || ''}
+          onChange={e => setEditData(d => ({ ...d, [field]: e.target.value }))}
+          disabled={disabled}
+          className={inp}
+        >
+          {options.map(o => <option key={o.value ?? o} value={o.value ?? o}>{o.label ?? o}</option>)}
+        </select>
+      ) : (
+        <input
+          type={type}
+          value={editData[field] || ''}
+          onChange={e => setEditData(d => ({ ...d, [field]: e.target.value }))}
+          disabled={disabled}
+          className={inp}
+        />
+      )}
+    </div>
+  )
 }
 
 function DocumentLocker({ empId }) {
@@ -57,49 +88,32 @@ function DocumentLocker({ empId }) {
 
   return (
     <div className="space-y-4">
-      {/* Upload form */}
       <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <p className="text-sm font-semibold text-white">Upload Document</p>
         <div className="grid grid-cols-3 gap-3">
-          <select
-            value={form.type}
-            onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-            className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white outline-none"
-          >
+          <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
+            className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white outline-none">
             {Object.entries(DOC_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <input
-            type="date"
-            value={form.expiresAt}
-            onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
-            className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white outline-none"
-            placeholder="Expiry (optional)"
-          />
-          <input
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+          <input type="date" value={form.expiresAt} onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
+            className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white outline-none" />
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
             onChange={e => setFile(e.target.files[0])}
-            className="text-sm text-gray-300 file:mr-2 file:px-3 file:py-1 file:rounded file:text-xs file:font-medium file:text-white file:border-0"
-            style={{ '--file-bg': '#1E6FD9' }}
-          />
+            className="text-sm text-gray-300 file:mr-2 file:px-3 file:py-1 file:rounded file:text-xs file:font-medium file:text-white file:border-0" />
         </div>
-        <button
-          onClick={upload}
-          disabled={!file || uploading}
+        <button onClick={upload} disabled={!file || uploading}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-          style={{ backgroundColor: '#1E6FD9', color: '#fff' }}
-        >
+          style={{ backgroundColor: '#1E6FD9', color: '#fff' }}>
           <Upload size={14} />{uploading ? 'Uploading…' : 'Upload'}
         </button>
       </div>
-
-      {/* Doc list */}
       {docs.length === 0 ? (
         <p className="text-gray-400 text-sm text-center py-8">No documents uploaded</p>
       ) : (
         <div className="space-y-2">
           {docs.map(doc => (
-            <div key={doc._id} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div key={doc._id} className="flex items-center justify-between p-3 rounded-lg"
+              style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex items-center gap-3">
                 <FolderOpen size={16} style={{ color: '#00C6FF' }} />
                 <div>
@@ -160,7 +174,6 @@ function FamilyTab({ empId }) {
           <Plus size={12} /> Add Member
         </button>
       </div>
-
       {adding && (
         <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="grid grid-cols-2 gap-3">
@@ -183,15 +196,17 @@ function FamilyTab({ empId }) {
           </div>
         </div>
       )}
-
       {members.length === 0 && !adding ? (
         <p className="text-gray-400 text-sm text-center py-8">No family members added</p>
       ) : (
         <div className="space-y-2">
           {members.map(m => (
-            <div key={m._id} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div key={m._id} className="flex items-center justify-between p-3 rounded-lg"
+              style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div>
-                <p className="text-sm text-white font-medium">{m.name} {m.isNominee && <span className="text-xs px-1 py-0.5 rounded ml-1" style={{ backgroundColor: '#FF6B00', color: '#fff' }}>Nominee</span>}</p>
+                <p className="text-sm text-white font-medium">{m.name}
+                  {m.isNominee && <span className="text-xs px-1 py-0.5 rounded ml-1" style={{ backgroundColor: '#FF6B00', color: '#fff' }}>Nominee</span>}
+                </p>
                 <p className="text-xs text-gray-400">{m.relation}{m.contact ? ` · ${m.contact}` : ''}</p>
               </div>
               <button onClick={() => remove(m._id)} className="p-1 text-red-400 hover:text-red-300"><Trash2 size={14} /></button>
@@ -215,21 +230,76 @@ export default function EmployeeDetailPage() {
   const [editMode, setEditMode] = useState(false)
   const [editData, setEditData] = useState({})
   const [saving, setSaving]     = useState(false)
+  const [saveErr, setSaveErr]   = useState('')
+
+  // For dropdowns in edit mode
+  const [depts, setDepts]         = useState([])
+  const [employees, setEmployees] = useState([])
 
   useEffect(() => {
     hrApi.getEmployee(id)
-      .then(r => { setEmployee(r.data.data.employee); setEditData(r.data.data.employee) })
+      .then(r => { setEmployee(r.data.data.employee); setEditData(flattenEmployee(r.data.data.employee)) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
 
+  // Load depts + employees when edit mode is activated
+  useEffect(() => {
+    if (!editMode) return
+    Promise.all([
+      api.get('/departments'),
+      hrApi.listEmployees({ limit: 200 }),
+    ]).then(([d, e]) => {
+      setDepts(d.data?.data?.departments || [])
+      setEmployees(e.data?.data?.employees || [])
+    }).catch(() => {})
+  }, [editMode])
+
+  // Flatten nested objects for editData
+  const flattenEmployee = (emp) => ({
+    firstName:    emp.firstName    || '',
+    middleName:   emp.middleName   || '',
+    lastName:     emp.lastName     || '',
+    dob:          emp.dob ? new Date(emp.dob).toISOString().slice(0, 10) : '',
+    gender:       emp.gender       || 'Male',
+    maritalStatus: emp.maritalStatus || 'Unmarried',
+    bloodGroup:   emp.bloodGroup   || '',
+    phone:        emp.phone        || '',
+    personalEmail: emp.personalEmail || '',
+    officialEmail: emp.officialEmail || '',
+    currentAddress:    emp.currentAddress    || '',
+    permanentAddress:  emp.permanentAddress  || '',
+    emergencyContactName:     emp.emergencyContactName     || '',
+    emergencyContactPhone:    emp.emergencyContactPhone    || '',
+    emergencyContactRelation: emp.emergencyContactRelation || '',
+    designation:      emp.designation     || '',
+    departmentId:     emp.departmentId?._id || emp.departmentId || '',
+    reportingManagerId: emp.reportingManagerId?._id || emp.reportingManagerId || '',
+    employmentType:   emp.employmentType   || 'Full Time',
+    officeLocation:   emp.officeLocation   || '',
+    probationEndDate: emp.probationEndDate ? new Date(emp.probationEndDate).toISOString().slice(0, 10) : '',
+    confirmationDate: emp.confirmationDate ? new Date(emp.confirmationDate).toISOString().slice(0, 10) : '',
+    currentCTC:       emp.currentCTC       || '',
+  })
+
   const save = async () => {
     setSaving(true)
+    setSaveErr('')
     try {
-      const r = await hrApi.updateEmployee(id, editData)
+      const payload = { ...editData }
+      if (!payload.departmentId) delete payload.departmentId
+      if (!payload.reportingManagerId) delete payload.reportingManagerId
+      if (!payload.probationEndDate) delete payload.probationEndDate
+      if (!payload.confirmationDate) delete payload.confirmationDate
+      if (!payload.currentCTC) delete payload.currentCTC
+      if (payload.currentCTC) payload.currentCTC = +payload.currentCTC
+      const r = await hrApi.updateEmployee(id, payload)
       setEmployee(r.data.data.employee)
+      setEditData(flattenEmployee(r.data.data.employee))
       setEditMode(false)
-    } catch (_) {}
+    } catch (err) {
+      setSaveErr(err.response?.data?.error?.message || 'Save failed')
+    }
     finally { setSaving(false) }
   }
 
@@ -240,7 +310,6 @@ export default function EmployeeDetailPage() {
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto" style={{ color: '#fff' }}>
-      {/* Back */}
       <button onClick={() => navigate('/hr/employees')} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
         <ArrowLeft size={16} /> Back to Directory
       </button>
@@ -257,36 +326,34 @@ export default function EmployeeDetailPage() {
             <p className="text-xs font-mono mt-1" style={{ color: '#00C6FF' }}>{employee.employeeCode}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-2">
           {editMode ? (
-            <>
+            <div className="flex gap-2">
               <button onClick={save} disabled={saving}
                 className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
                 style={{ backgroundColor: '#10B981', color: '#fff' }}>
-                <Check size={12} />{saving ? 'Saving…' : 'Save'}
+                <Check size={12} />{saving ? 'Saving…' : 'Save Changes'}
               </button>
-              <button onClick={() => { setEditMode(false); setEditData(employee) }}
+              <button onClick={() => { setEditMode(false); setEditData(flattenEmployee(employee)); setSaveErr('') }}
                 className="px-3 py-1.5 rounded text-xs font-medium bg-white/5 text-gray-300">
                 Cancel
               </button>
-            </>
+            </div>
           ) : (
             <button onClick={() => setEditMode(true)}
               className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium bg-white/5 text-gray-300 hover:text-white">
               <Edit3 size={12} /> Edit
             </button>
           )}
+          {saveErr && <p className="text-xs text-red-400">{saveErr}</p>}
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
         {TABS.map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t ? 'text-white border-blue-500' : 'text-gray-400 border-transparent hover:text-white'}`}
-          >
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t ? 'text-white border-blue-500' : 'text-gray-400 border-transparent hover:text-white'}`}>
             {t}
           </button>
         ))}
@@ -299,33 +366,71 @@ export default function EmployeeDetailPage() {
             <section>
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Personal</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <FIELD_ROW label="First Name"     value={employee.firstName} />
-                <FIELD_ROW label="Middle Name"    value={employee.middleName} />
-                <FIELD_ROW label="Last Name"      value={employee.lastName} />
-                <FIELD_ROW label="Date of Birth"  value={employee.dob ? new Date(employee.dob).toLocaleDateString('en-IN') : null} />
-                <FIELD_ROW label="Gender"         value={employee.gender} />
-                <FIELD_ROW label="Marital Status" value={employee.maritalStatus} />
-                <FIELD_ROW label="Blood Group"    value={employee.bloodGroup} />
+                {editMode ? (
+                  <>
+                    <EditField label="First Name"    field="firstName"    editData={editData} setEditData={setEditData} />
+                    <EditField label="Middle Name"   field="middleName"   editData={editData} setEditData={setEditData} />
+                    <EditField label="Last Name"     field="lastName"     editData={editData} setEditData={setEditData} />
+                    <EditField label="Date of Birth" field="dob"          editData={editData} setEditData={setEditData} type="date" />
+                    <EditField label="Gender"        field="gender"       editData={editData} setEditData={setEditData}
+                      options={['Male', 'Female', 'Other']} />
+                    <EditField label="Marital Status" field="maritalStatus" editData={editData} setEditData={setEditData}
+                      options={['Unmarried', 'Married', 'Other']} />
+                    <EditField label="Blood Group"   field="bloodGroup"   editData={editData} setEditData={setEditData} />
+                  </>
+                ) : (
+                  <>
+                    <ReadField label="First Name"     value={employee.firstName} />
+                    <ReadField label="Middle Name"    value={employee.middleName} />
+                    <ReadField label="Last Name"      value={employee.lastName} />
+                    <ReadField label="Date of Birth"  value={employee.dob ? new Date(employee.dob).toLocaleDateString('en-IN') : null} />
+                    <ReadField label="Gender"         value={employee.gender} />
+                    <ReadField label="Marital Status" value={employee.maritalStatus} />
+                    <ReadField label="Blood Group"    value={employee.bloodGroup} />
+                  </>
+                )}
               </div>
             </section>
             <hr style={{ borderColor: 'rgba(255,255,255,0.06)' }} />
             <section>
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Contact</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <FIELD_ROW label="Phone"           value={employee.phone} />
-                <FIELD_ROW label="Personal Email"  value={employee.personalEmail} />
-                <FIELD_ROW label="Official Email"  value={employee.officialEmail} />
-                <FIELD_ROW label="Current Address" value={employee.currentAddress} />
-                <FIELD_ROW label="Permanent Address" value={employee.permanentAddress} />
+                {editMode ? (
+                  <>
+                    <EditField label="Phone"           field="phone"          editData={editData} setEditData={setEditData} />
+                    <EditField label="Personal Email"  field="personalEmail"  editData={editData} setEditData={setEditData} type="email" />
+                    <EditField label="Official Email"  field="officialEmail"  editData={editData} setEditData={setEditData} type="email" />
+                    <EditField label="Current Address" field="currentAddress" editData={editData} setEditData={setEditData} />
+                    <EditField label="Permanent Address" field="permanentAddress" editData={editData} setEditData={setEditData} />
+                  </>
+                ) : (
+                  <>
+                    <ReadField label="Phone"           value={employee.phone} />
+                    <ReadField label="Personal Email"  value={employee.personalEmail} />
+                    <ReadField label="Official Email"  value={employee.officialEmail} />
+                    <ReadField label="Current Address" value={employee.currentAddress} />
+                    <ReadField label="Permanent Address" value={employee.permanentAddress} />
+                  </>
+                )}
               </div>
             </section>
             <hr style={{ borderColor: 'rgba(255,255,255,0.06)' }} />
             <section>
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Emergency Contact</h3>
               <div className="grid grid-cols-3 gap-4">
-                <FIELD_ROW label="Name"     value={employee.emergencyContactName} />
-                <FIELD_ROW label="Phone"    value={employee.emergencyContactPhone} />
-                <FIELD_ROW label="Relation" value={employee.emergencyContactRelation} />
+                {editMode ? (
+                  <>
+                    <EditField label="Name"     field="emergencyContactName"     editData={editData} setEditData={setEditData} />
+                    <EditField label="Phone"    field="emergencyContactPhone"    editData={editData} setEditData={setEditData} />
+                    <EditField label="Relation" field="emergencyContactRelation" editData={editData} setEditData={setEditData} />
+                  </>
+                ) : (
+                  <>
+                    <ReadField label="Name"     value={employee.emergencyContactName} />
+                    <ReadField label="Phone"    value={employee.emergencyContactPhone} />
+                    <ReadField label="Relation" value={employee.emergencyContactRelation} />
+                  </>
+                )}
               </div>
             </section>
           </div>
@@ -334,23 +439,46 @@ export default function EmployeeDetailPage() {
         {tab === 'Employment' && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <FIELD_ROW label="Designation"       value={employee.designation} />
-              <FIELD_ROW label="Department"        value={employee.departmentId?.name} />
-              <FIELD_ROW label="Reporting Manager" value={employee.reportingManagerId ? [employee.reportingManagerId.firstName, employee.reportingManagerId.lastName].join(' ') : null} />
-              <FIELD_ROW label="Date of Joining"   value={employee.dateOfJoining ? new Date(employee.dateOfJoining).toLocaleDateString('en-IN') : null} />
-              <FIELD_ROW label="Employment Type"   value={employee.employmentType} />
-              <FIELD_ROW label="Employment Status" value={employee.employmentStatus} />
-              <FIELD_ROW label="Probation End"     value={employee.probationEndDate ? new Date(employee.probationEndDate).toLocaleDateString('en-IN') : null} />
-              <FIELD_ROW label="Confirmation Date" value={employee.confirmationDate ? new Date(employee.confirmationDate).toLocaleDateString('en-IN') : null} />
-              <FIELD_ROW label="Office Location"   value={employee.officeLocation} />
+              {editMode ? (
+                <>
+                  <EditField label="Designation" field="designation" editData={editData} setEditData={setEditData} />
+                  <EditField label="Department" field="departmentId" editData={editData} setEditData={setEditData}
+                    options={[{ value: '', label: 'No Department' }, ...depts.map(d => ({ value: d._id, label: d.name }))]} />
+                  <EditField label="Reporting Manager" field="reportingManagerId" editData={editData} setEditData={setEditData}
+                    options={[{ value: '', label: 'None' }, ...employees.map(e => ({ value: e._id, label: `${e.firstName} ${e.lastName} (${e.employeeCode})` }))]} />
+                  <EditField label="Date of Joining" field="dateOfJoining" editData={editData} setEditData={setEditData} type="date" disabled />
+                  <EditField label="Employment Type" field="employmentType" editData={editData} setEditData={setEditData}
+                    options={['Full Time', 'Part Time', 'Internship', 'Freelance', 'Contract']} />
+                  <ReadField label="Employment Status" value={employee.employmentStatus} />
+                  <EditField label="Probation End Date" field="probationEndDate" editData={editData} setEditData={setEditData} type="date" />
+                  <EditField label="Confirmation Date" field="confirmationDate" editData={editData} setEditData={setEditData} type="date" />
+                  <EditField label="Office Location" field="officeLocation" editData={editData} setEditData={setEditData} />
+                </>
+              ) : (
+                <>
+                  <ReadField label="Designation"       value={employee.designation} />
+                  <ReadField label="Department"        value={employee.departmentId?.name} />
+                  <ReadField label="Reporting Manager" value={employee.reportingManagerId ? [employee.reportingManagerId.firstName, employee.reportingManagerId.lastName].join(' ') : null} />
+                  <ReadField label="Date of Joining"   value={employee.dateOfJoining ? new Date(employee.dateOfJoining).toLocaleDateString('en-IN') : null} />
+                  <ReadField label="Employment Type"   value={employee.employmentType} />
+                  <ReadField label="Employment Status" value={employee.employmentStatus} />
+                  <ReadField label="Probation End"     value={employee.probationEndDate ? new Date(employee.probationEndDate).toLocaleDateString('en-IN') : null} />
+                  <ReadField label="Confirmation Date" value={employee.confirmationDate ? new Date(employee.confirmationDate).toLocaleDateString('en-IN') : null} />
+                  <ReadField label="Office Location"   value={employee.officeLocation} />
+                </>
+              )}
             </div>
 
-            {canViewSensitive && employee.currentCTC && (
+            {canViewSensitive && (
               <>
                 <hr style={{ borderColor: 'rgba(255,255,255,0.06)' }} />
                 <section>
                   <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Salary (Restricted)</h3>
-                  <FIELD_ROW label="Current CTC" value={employee.currentCTC ? `₹${employee.currentCTC.toLocaleString('en-IN')}/yr` : null} />
+                  {editMode ? (
+                    <EditField label="Current CTC (₹/yr)" field="currentCTC" editData={editData} setEditData={setEditData} type="number" />
+                  ) : (
+                    <ReadField label="Current CTC" value={employee.currentCTC ? `₹${employee.currentCTC.toLocaleString('en-IN')}/yr` : null} />
+                  )}
                 </section>
               </>
             )}
@@ -361,9 +489,9 @@ export default function EmployeeDetailPage() {
                 <section>
                   <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-4">Exit Info</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <FIELD_ROW label="Exit Date"    value={new Date(employee.exitInfo.exitDate).toLocaleDateString('en-IN')} />
-                    <FIELD_ROW label="Exit Reason"  value={employee.exitInfo.exitReason} />
-                    <FIELD_ROW label="Settlement"   value={employee.exitInfo.finalSettlementStatus} />
+                    <ReadField label="Exit Date"    value={new Date(employee.exitInfo.exitDate).toLocaleDateString('en-IN')} />
+                    <ReadField label="Exit Reason"  value={employee.exitInfo.exitReason} />
+                    <ReadField label="Settlement"   value={employee.exitInfo.finalSettlementStatus} />
                   </div>
                 </section>
               </>
@@ -372,7 +500,6 @@ export default function EmployeeDetailPage() {
         )}
 
         {tab === 'Documents' && <DocumentLocker empId={id} />}
-
         {tab === 'Family' && <FamilyTab empId={id} />}
       </div>
     </div>

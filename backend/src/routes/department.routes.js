@@ -9,7 +9,7 @@ router.use(authMiddleware)
 router.get('/', deptController.list)
 router.get('/:id', deptController.getOne)
 router.post('/', requireRole('SUPERADMIN'), deptController.create)
-router.patch('/:id', requireRole('ADMIN'), deptController.update)
+router.patch('/:id', requireRole('SUPERADMIN'), deptController.update)
 router.delete('/:id', requireRole('SUPERADMIN'), deptController.remove)
 
 module.exports = router

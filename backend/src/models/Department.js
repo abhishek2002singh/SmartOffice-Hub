@@ -6,6 +6,10 @@ const departmentSchema = new mongoose.Schema(
     code: { type: String, required: true, trim: true, uppercase: true, unique: true },
     description: { type: String, trim: true },
     head: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    skills: [{
+      name:     { type: String, required: true, trim: true },
+      category: { type: String, trim: true, default: 'General' },
+    }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     deletedAt: { type: Date, default: null },

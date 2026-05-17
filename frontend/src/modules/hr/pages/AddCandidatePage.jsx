@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { hrApi } from '../../../api/hr.api'
+import api from '../../../api/axios'
 
 const STEPS = ['Personal', 'Background', 'Application', 'Skills']
 
@@ -52,6 +53,7 @@ export default function AddCandidatePage() {
   const [error, setError]     = useState('')
   const [dupInfo, setDupInfo] = useState(null)
   const [skillMatrix, setSkillMatrix] = useState([])
+  const [allDepts, setAllDepts] = useState([])
 
   const [form, setForm] = useState({
     firstName: '', middleName: '', lastName: '',
@@ -105,16 +107,32 @@ export default function AddCandidatePage() {
       .finally(() => setLoading(false))
   }, [id, isEdit])
 
-  // Load skill matrix when profile changes
+  // Load departments once
   useEffect(() => {
-    hrApi.getConfig().then(r => {
-      const matrices = r.data.data.config?.skillMatrices
-      if (matrices) {
-        const matrix = matrices[form.appliedProfile] || []
-        setSkillMatrix(Array.isArray(matrix) ? matrix : Object.values(matrix))
-      }
-    }).catch(() => {})
-  }, [form.appliedProfile])
+    api.get('/departments').then(r => setAllDepts(r.data?.data?.departments || [])).catch(() => {})
+  }, [])
+
+  // Load skill matrix from department when profile changes
+  useEffect(() => {
+    const profile = form.appliedProfile.toLowerCase()
+    const dept = allDepts.find(d =>
+      d.name.toLowerCase().includes(profile) ||
+      d.code.toLowerCase() === profile ||
+      d.code.toLowerCase().startsWith(profile.slice(0, 3))
+    )
+    if (dept?.skills?.length) {
+      setSkillMatrix(dept.skills)
+    } else {
+      // Fallback to HRConfig skill matrices
+      hrApi.getConfig().then(r => {
+        const matrices = r.data.data.config?.skillMatrices
+        if (matrices) {
+          const matrix = matrices[form.appliedProfile] || []
+          setSkillMatrix(Array.isArray(matrix) ? matrix : Object.values(matrix))
+        }
+      }).catch(() => {})
+    }
+  }, [form.appliedProfile, allDepts])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 

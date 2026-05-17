@@ -43,6 +43,7 @@ const update = async (req, res, next) => {
 
     const before = dept.toObject()
     Object.assign(dept, { ...parsed.data, updatedBy: req.user.userId })
+    if (parsed.data.skills !== undefined) dept.markModified('skills')
     await dept.save()
 
     await logAudit({ userId: req.user.userId, action: 'UPDATE', resource: 'department', resourceId: dept._id, before, after: dept.toObject(), req })

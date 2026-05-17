@@ -89,6 +89,7 @@ exports.listCandidates = async (req, res) => {
     } = req.query;
 
     const filter = { deletedAt: null };
+    if (req.query.showConverted !== 'true') filter.convertedToEmployee = { $ne: true };
     if (status)         filter.status = status;
     if (appliedProfile) filter.appliedProfile = appliedProfile;
     if (appliedFor)     filter.appliedFor = appliedFor;
@@ -611,26 +612,31 @@ exports.onboardEmployee = async (req, res) => {
     // Generate employee code
     const employeeCode = await generateEmployeeCode();
 
-    // Create AMS User account if officialEmail provided and no existing user
+    // Always create an AMS User account; use generated email if no officialEmail
     let userId = null;
-    if (officialEmail) {
-      const existing = await User.findOne({ email: officialEmail.toLowerCase() });
-      if (existing) {
-        userId = existing._id;
-      } else {
-        const defaultPassword = `ANK@${new Date().getFullYear()}`;
-        const bcrypt = require('bcryptjs');
-        const hashed = await bcrypt.hash(defaultPassword, 12);
-        const newUser = await User.create({
-          name:      `${candidate.firstName} ${candidate.lastName}`.trim(),
-          email:     officialEmail.toLowerCase(),
-          password:  hashed,
-          role:      'TEAM_MEMBER',
-          permissions: [],
-          createdBy: req.user.userId,
-        });
-        userId = newUser._id;
+    const emailToUse = officialEmail
+      ? officialEmail.toLowerCase()
+      : `${employeeCode.toLowerCase()}@ank.internal`;
+    const existingUser = await User.findOne({ email: emailToUse });
+    if (existingUser) {
+      userId = existingUser._id;
+      if (departmentId && !existingUser.department) {
+        existingUser.department = departmentId;
+        existingUser.updatedBy = req.user.userId;
+        await existingUser.save();
       }
+    } else {
+      const defaultPassword = `ANK@${new Date().getFullYear()}`;
+      const newUser = await User.create({
+        name:       `${candidate.firstName} ${candidate.lastName}`.trim(),
+        email:      emailToUse,
+        password:   defaultPassword,
+        role:       'TEAM_MEMBER',
+        department: departmentId || null,
+        permissions: [],
+        createdBy:  req.user.userId,
+      });
+      userId = newUser._id;
     }
 
     const employee = await Employee.create({
