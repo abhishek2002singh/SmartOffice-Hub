@@ -1037,3 +1037,205 @@ exports.deleteFamilyMember = async (req, res) => {
     res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
   }
 };
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CANDIDATE — HARD DELETE / BULK SOFT DELETE / RESTORE / ARCHIVE
+// ══════════════════════════════════════════════════════════════════════════════
+
+exports.hardDeleteCandidate = async (req, res) => {
+  try {
+    const { confirmText } = req.body;
+    if (confirmText !== 'DELETE') {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Type DELETE to confirm permanent deletion' } });
+    }
+    const candidate = await Candidate.findById(req.params.id);
+    if (!candidate) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Candidate not found' } });
+    if (candidate.convertedToEmployee) {
+      return res.status(400).json({ success: false, error: { code: 'CONFLICT', message: 'Candidate is onboarded as employee. Delete from Employee records instead.' } });
+    }
+    const snapshot = candidate.toObject();
+    await Candidate.findByIdAndDelete(req.params.id);
+    await logAudit({ userId: req.user.userId, action: 'DELETE', resource: 'candidate', resourceId: req.params.id, before: snapshot, req });
+    res.json({ success: true, message: 'Candidate permanently deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+exports.bulkSoftDeleteCandidates = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'IDs array required' } });
+    }
+    if (ids.length > 100) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Max 100 at once' } });
+    }
+    const onboarded = await Candidate.find({ _id: { $in: ids }, convertedToEmployee: true }).select('firstName lastName');
+    if (onboarded.length > 0) {
+      return res.status(400).json({ success: false, error: { code: 'CONFLICT', message: `${onboarded.length} candidate(s) are onboarded as employees and cannot be deleted.` } });
+    }
+    const result = await Candidate.updateMany(
+      { _id: { $in: ids }, deletedAt: null },
+      { $set: { deletedAt: new Date(), updatedBy: req.user.userId } }
+    );
+    await logAudit({ userId: req.user.userId, action: 'DELETE', resource: 'candidate', resourceId: null, before: { ids, count: result.modifiedCount }, req });
+    res.json({ success: true, message: `${result.modifiedCount} candidates archived`, data: { count: result.modifiedCount } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+exports.restoreCandidate = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+    if (!candidate || !candidate.deletedAt) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Archived candidate not found' } });
+    }
+    candidate.deletedAt = null;
+    candidate.updatedBy = req.user.userId;
+    await candidate.save();
+    await logAudit({ userId: req.user.userId, action: 'UPDATE', resource: 'candidate', resourceId: candidate._id, after: { restored: true }, req });
+    res.json({ success: true, message: 'Candidate restored successfully', data: { candidate } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+exports.listArchivedCandidates = async (req, res) => {
+  try {
+    const { q, page = 1, limit = 20 } = req.query;
+    const filter = { deletedAt: { $ne: null } };
+    if (q) {
+      const rx = { $regex: q, $options: 'i' };
+      filter.$or = [{ firstName: rx }, { lastName: rx }, { email: rx }, { phone: rx }];
+    }
+    const skip = (page - 1) * limit;
+    const [candidates, total] = await Promise.all([
+      Candidate.find(filter).sort('-deletedAt').skip(skip).limit(+limit)
+        .populate('updatedBy', 'name').lean(),
+      Candidate.countDocuments(filter),
+    ]);
+    res.json({ success: true, data: { candidates, total, page: +page, pages: Math.ceil(total / limit) } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EMPLOYEE — SOFT DELETE / HARD DELETE / BULK SOFT DELETE / RESTORE / ARCHIVE
+// ══════════════════════════════════════════════════════════════════════════════
+
+const ACTIVE_EMP_STATUSES = ['probation', 'confirmed'];
+
+exports.softDeleteEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ _id: req.params.id, deletedAt: null });
+    if (!employee) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Employee not found' } });
+    if (ACTIVE_EMP_STATUSES.includes(employee.employmentStatus)) {
+      return res.status(400).json({ success: false, error: { code: 'CONFLICT', message: `Cannot delete active employee (${employee.employmentStatus}). Run exit workflow first to mark as resigned/terminated/relieved.` } });
+    }
+    const before = employee.toObject();
+    employee.deletedAt = new Date();
+    employee.updatedBy = req.user.userId;
+    await employee.save();
+    if (employee.userId) {
+      await User.findByIdAndUpdate(employee.userId, { isActive: false });
+    }
+    await logAudit({ userId: req.user.userId, action: 'DELETE', resource: 'employee', resourceId: employee._id, before, req });
+    res.json({ success: true, message: 'Employee archived. Linked user account deactivated.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+exports.hardDeleteEmployee = async (req, res) => {
+  try {
+    const { confirmText, reason } = req.body;
+    if (confirmText !== 'DELETE PERMANENTLY') {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Type DELETE PERMANENTLY to confirm' } });
+    }
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Reason required (min 10 characters)' } });
+    }
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Employee not found' } });
+    if (ACTIVE_EMP_STATUSES.includes(employee.employmentStatus)) {
+      return res.status(400).json({ success: false, error: { code: 'CONFLICT', message: 'Cannot hard-delete active employee. Run exit workflow first.' } });
+    }
+    const snapshot = employee.toObject();
+    if (employee.userId) {
+      await User.findByIdAndDelete(employee.userId);
+    }
+    await Employee.findByIdAndDelete(req.params.id);
+    await logAudit({ userId: req.user.userId, action: 'DELETE', resource: 'employee', resourceId: req.params.id, before: { ...snapshot, reason, permanentlyDeleted: true }, req });
+    res.json({ success: true, message: 'Employee permanently deleted. User account removed.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+exports.bulkSoftDeleteEmployees = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'IDs array required' } });
+    }
+    if (ids.length > 100) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Max 100 at once' } });
+    }
+    const active = await Employee.find({ _id: { $in: ids }, employmentStatus: { $in: ACTIVE_EMP_STATUSES }, deletedAt: null })
+      .select('employeeCode employmentStatus firstName lastName');
+    if (active.length > 0) {
+      return res.status(400).json({ success: false, error: { code: 'CONFLICT', message: `${active.length} active employee(s) in selection. Run exit workflow first.` } });
+    }
+    const result = await Employee.updateMany(
+      { _id: { $in: ids }, deletedAt: null },
+      { $set: { deletedAt: new Date(), updatedBy: req.user.userId } }
+    );
+    const withUsers = await Employee.find({ _id: { $in: ids }, userId: { $ne: null } }).select('userId');
+    const userIds = withUsers.map(e => e.userId).filter(Boolean);
+    if (userIds.length) await User.updateMany({ _id: { $in: userIds } }, { $set: { isActive: false } });
+    await logAudit({ userId: req.user.userId, action: 'DELETE', resource: 'employee', resourceId: null, before: { ids, count: result.modifiedCount }, req });
+    res.json({ success: true, message: `${result.modifiedCount} employees archived`, data: { count: result.modifiedCount } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+exports.restoreEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee || !employee.deletedAt) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Archived employee not found' } });
+    }
+    employee.deletedAt = null;
+    employee.updatedBy = req.user.userId;
+    await employee.save();
+    if (employee.userId) await User.findByIdAndUpdate(employee.userId, { isActive: true });
+    await logAudit({ userId: req.user.userId, action: 'UPDATE', resource: 'employee', resourceId: employee._id, after: { restored: true }, req });
+    res.json({ success: true, message: 'Employee restored. User account reactivated.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};
+
+exports.listArchivedEmployees = async (req, res) => {
+  try {
+    const { q, page = 1, limit = 20 } = req.query;
+    const filter = { deletedAt: { $ne: null } };
+    if (q) {
+      const rx = { $regex: q, $options: 'i' };
+      filter.$or = [{ firstName: rx }, { lastName: rx }, { officialEmail: rx }, { employeeCode: rx }];
+    }
+    const skip = (page - 1) * limit;
+    const [employees, total] = await Promise.all([
+      Employee.find(filter).sort('-deletedAt').skip(skip).limit(+limit)
+        .populate('departmentId', 'name').lean(),
+      Employee.countDocuments(filter),
+    ]);
+    res.json({ success: true, data: { employees, total, page: +page, pages: Math.ceil(total / limit) } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+};

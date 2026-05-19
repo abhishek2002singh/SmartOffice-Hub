@@ -11,7 +11,11 @@ export const hrApi = {
   createCandidate: (data)   => api.post('/hr/candidates', data),
   updateCandidate: (id, data) => api.patch(`/hr/candidates/${id}`, data),
   updateStatus:    (id, data) => api.patch(`/hr/candidates/${id}/status`, data),
-  deleteCandidate: (id)     => api.delete(`/hr/candidates/${id}`),
+  deleteCandidate:       (id)          => api.delete(`/hr/candidates/${id}`),
+  hardDeleteCandidate:   (id, data)    => api.delete(`/hr/candidates/${id}/permanent`, { data }),
+  bulkSoftDeleteCandidates: (ids)      => api.post('/hr/candidates/bulk-delete', { ids }),
+  restoreCandidate:      (id)          => api.post(`/hr/candidates/${id}/restore`),
+  listArchivedCandidates:(params)      => api.get('/hr/candidates/archive', { params }),
 
   // Bulk import — Content-Type: undefined clears the axios default (application/json)
   // so axios auto-sets multipart/form-data with the correct boundary
@@ -40,7 +44,12 @@ export const hrApi = {
   listEmployees:    (params)  => api.get('/hr/employees', { params }),
   getEmployee:      (id)      => api.get(`/hr/employees/${id}`),
   updateEmployee:   (id, data) => api.patch(`/hr/employees/${id}`, data),
-  initiateExit:     (id, data) => api.post(`/hr/employees/${id}/exit`, data),
+  initiateExit:           (id, data)   => api.post(`/hr/employees/${id}/exit`, data),
+  softDeleteEmployee:     (id)         => api.delete(`/hr/employees/${id}`),
+  hardDeleteEmployee:     (id, data)   => api.delete(`/hr/employees/${id}/permanent`, { data }),
+  bulkSoftDeleteEmployees:(ids)        => api.post('/hr/employees/bulk-delete', { ids }),
+  restoreEmployee:        (id)         => api.post(`/hr/employees/${id}/restore`),
+  listArchivedEmployees:  (params)     => api.get('/hr/employees/archive', { params }),
 
   // Documents
   listDocuments:   (empId)          => api.get(`/hr/employees/${empId}/documents`),

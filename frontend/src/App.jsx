@@ -40,8 +40,10 @@ const CandidateDetailPage     = lazy(() => import('./modules/hr/pages/CandidateD
 const AddCandidatePage        = lazy(() => import('./modules/hr/pages/AddCandidatePage'))
 const BulkImportPage          = lazy(() => import('./modules/hr/pages/BulkImportPage'))
 const RejectedPoolPage        = lazy(() => import('./modules/hr/pages/RejectedPoolPage'))
+const CandidatesArchivePage   = lazy(() => import('./modules/hr/pages/CandidatesArchivePage'))
 const EmployeeDirectoryPage   = lazy(() => import('./modules/hr/pages/EmployeeDirectoryPage'))
 const EmployeeDetailPage      = lazy(() => import('./modules/hr/pages/EmployeeDetailPage'))
+const EmployeesArchivePage    = lazy(() => import('./modules/hr/pages/EmployeesArchivePage'))
 const OnboardingWizardPage    = lazy(() => import('./modules/hr/pages/OnboardingWizardPage'))
 const EmployeeSelfServicePage = lazy(() => import('./modules/hr/pages/EmployeeSelfServicePage'))
 const MyAttendancePage        = lazy(() => import('./modules/hr/pages/MyAttendancePage'))
@@ -167,16 +169,18 @@ function AppRoutes() {
           </Route>
 
           {/* HR — Candidates */}
-          <Route path="hr/candidates"          element={<ProtectedRoute minRole="DEPT_HEAD"><L><CandidateListPage /></L></ProtectedRoute>} />
-          <Route path="hr/candidates/new"      element={<ProtectedRoute minRole="DEPT_HEAD"><L><AddCandidatePage /></L></ProtectedRoute>} />
-          <Route path="hr/candidates/import"   element={<ProtectedRoute minRole="DEPT_HEAD"><L><BulkImportPage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates"           element={<ProtectedRoute minRole="DEPT_HEAD"><L><CandidateListPage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates/new"       element={<ProtectedRoute minRole="DEPT_HEAD"><L><AddCandidatePage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates/import"    element={<ProtectedRoute minRole="DEPT_HEAD"><L><BulkImportPage /></L></ProtectedRoute>} />
           <Route path="hr/candidates/rejected"  element={<ProtectedRoute minRole="DEPT_HEAD"><L><RejectedPoolPage /></L></ProtectedRoute>} />
-          <Route path="hr/candidates/:id/edit" element={<ProtectedRoute minRole="DEPT_HEAD"><L><AddCandidatePage /></L></ProtectedRoute>} />
-          <Route path="hr/candidates/:id"      element={<ProtectedRoute minRole="DEPT_HEAD"><L><CandidateDetailPage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates/archive"   element={<ProtectedRoute minRole="ADMIN"><L><CandidatesArchivePage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates/:id/edit"  element={<ProtectedRoute minRole="DEPT_HEAD"><L><AddCandidatePage /></L></ProtectedRoute>} />
+          <Route path="hr/candidates/:id"       element={<ProtectedRoute minRole="DEPT_HEAD"><L><CandidateDetailPage /></L></ProtectedRoute>} />
 
           {/* HR — Employees */}
           <Route path="hr/employees"             element={<ProtectedRoute minRole="DEPT_HEAD"><L><EmployeeDirectoryPage /></L></ProtectedRoute>} />
           <Route path="hr/employees/onboard"     element={<ProtectedRoute minRole="ADMIN"><L><OnboardingWizardPage /></L></ProtectedRoute>} />
+          <Route path="hr/employees/archive"     element={<ProtectedRoute minRole="ADMIN"><L><EmployeesArchivePage /></L></ProtectedRoute>} />
           <Route path="hr/employees/:id"         element={<ProtectedRoute minRole="DEPT_HEAD"><L><EmployeeDetailPage /></L></ProtectedRoute>} />
           <Route path="hr/me"                    element={<L><EmployeeSelfServicePage /></L>} />
 

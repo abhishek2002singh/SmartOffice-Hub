@@ -26,10 +26,15 @@ router.patch('/config',        requirePermission('hr:config:update'), ctrl.updat
 router.get   ('/candidates',              requirePermission('hr:candidate:read'),   ctrl.listCandidates);
 router.post  ('/candidates',              requirePermission('hr:candidate:create'), ctrl.createCandidate);
 router.post  ('/candidates/bulk-import',  requirePermission('hr:bulk_import:create'), upload.single('file'), ctrl.bulkImport);
+// Archive + bulk routes BEFORE /:id to prevent route collision
+router.get   ('/candidates/archive',      requirePermission('hr:candidate:read'),   ctrl.listArchivedCandidates);
+router.post  ('/candidates/bulk-delete',  requireRole('ADMIN'),                     ctrl.bulkSoftDeleteCandidates);
 router.get   ('/candidates/:id',          requirePermission('hr:candidate:read'),   ctrl.getCandidate);
 router.patch ('/candidates/:id',          requirePermission('hr:candidate:update'), ctrl.updateCandidate);
 router.patch ('/candidates/:id/status',   requirePermission('hr:candidate:update'), ctrl.updateStatus);
 router.delete('/candidates/:id',          requirePermission('hr:candidate:delete'), ctrl.deleteCandidate);
+router.delete('/candidates/:id/permanent',requireRole('SUPERADMIN'),                ctrl.hardDeleteCandidate);
+router.post  ('/candidates/:id/restore',  requireRole('ADMIN'),                     ctrl.restoreCandidate);
 
 // ── Follow-ups ────────────────────────────────────────────────────────────────
 router.get   ('/candidates/:id/followups',               requirePermission('hr:followup:read'),   ctrl.listFollowups);
@@ -52,8 +57,14 @@ router.get('/dashboard', requirePermission('hr:candidate:read'), ctrl.hrDashboar
 // ── WEEK 16 — Employees ───────────────────────────────────────────────────────
 router.post  ('/employees/onboard/:candidateId', requirePermission('hr:employee:create'), ctrl.onboardEmployee);
 router.get   ('/employees',                      requirePermission('hr:employee:read'),   ctrl.listEmployees);
+// Archive + bulk routes BEFORE /:id to prevent route collision
+router.get   ('/employees/archive',              requirePermission('hr:employee:read'),   ctrl.listArchivedEmployees);
+router.post  ('/employees/bulk-delete',          requireRole('ADMIN'),                    ctrl.bulkSoftDeleteEmployees);
 router.get   ('/employees/:id',                  requirePermission('hr:employee:read'),   ctrl.getEmployee);
 router.patch ('/employees/:id',                  requirePermission('hr:employee:update'), ctrl.updateEmployee);
+router.delete('/employees/:id',                  requireRole('ADMIN'),                    ctrl.softDeleteEmployee);
+router.delete('/employees/:id/permanent',        requireRole('SUPERADMIN'),               ctrl.hardDeleteEmployee);
+router.post  ('/employees/:id/restore',          requireRole('ADMIN'),                    ctrl.restoreEmployee);
 router.post  ('/employees/:id/exit',             requirePermission('hr:employee:exit'),   ctrl.initiateExit);
 
 // ── Employee Documents ────────────────────────────────────────────────────────
