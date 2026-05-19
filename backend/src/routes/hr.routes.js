@@ -2,7 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const multer  = require('multer');
 const auth                  = require('../middleware/auth.middleware');
-const { requirePermission } = require('../middleware/rbac.middleware');
+const { requirePermission, requireRole } = require('../middleware/rbac.middleware');
 const ctrl  = require('../controllers/hr.controller');
 const attCtrl = require('../controllers/attendance.controller');
 
